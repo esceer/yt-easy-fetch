@@ -67,6 +67,5 @@ function download(url, startTime = 0, audioonly = false) {
     }
     console.log('options: ' + JSON.stringify(options));
 
-    // return ytdl(videoId, options);
-    return ytdl(videoId, {begin: "55s", filter: "audioonly"});
+    return ytdl(videoId, options);
 }
