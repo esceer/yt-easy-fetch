@@ -9,19 +9,19 @@ app.get('/getinfo/:url', (req, res) => {
 });
 
 app.get('/download/:url', (req, res) => {
-    stream = download(req.params.url);
+    stream = download(req.params.url, req.query.t);
     res.setHeader('Content-Disposition', 'attachment; filename=' + generateFileName(req.params.url));
     stream.pipe(res);
 });
 
 app.get('/download/video/:url', (req, res) => {
-    stream = download(req.params.url, false);
+    stream = download(req.params.url, req.query.t, false);
     res.setHeader('Content-Disposition', 'attachment; filename=' + generateFileName(req.params.url, false));
     stream.pipe(res);
 });
 
 app.get('/download/audio/:url', (req, res) => {
-    stream = download(req.params.url, true);
+    stream = download(req.params.url, req.query.t, true);
     res.setHeader('Content-Disposition', 'attachment; filename=' + generateFileName(req.params.url, true));
     stream.pipe(res);
 });
@@ -56,12 +56,16 @@ function getInfo(url) {
     });
 }
 
-function download(url, audioonly = false) {
+function download(url, startTime = 0, audioonly = false) {
     let videoId = getVideoId(url);
     console.log('video id:', videoId);
+
+    let options = { begin: startTime };
+
     if (audioonly === true) {
-        return ytdl(videoId, { filter: 'audioonly' });
-    } else {
-        return ytdl(videoId);
+        options.filter = 'audioonly';
     }
+    console.log('options: ' + JSON.stringify(options));
+
+    return ytdl(videoId, options);
 }

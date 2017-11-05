@@ -12,7 +12,7 @@ function download(e) {
         console.log('youtube vid url: ', url);
 
         // Fetching details
-        let videoId = ytdl.getVideoID(url);
+        let videoId = getVideoIdWithQueryParams(url);
         console.log('video id:', videoId);
 
         // Trigger downloading the video via the browser
@@ -24,6 +24,11 @@ function download(e) {
     }
 
     e.preventDefault();
+}
+
+function getVideoIdWithQueryParams(url) {
+    let videoId = ytdl.getVideoID(url);
+    return url.slice(url.indexOf(videoId));
 }
 
 function triggerBrowserDownload(videoId, mode) {
