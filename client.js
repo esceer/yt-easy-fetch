@@ -32,7 +32,7 @@ function getVideoIdWithQueryParams(url) {
 }
 
 function triggerBrowserDownload(videoId, mode) {
-    if (isChrome()) {
+    // if (isChrome()) {
         // Preparing the file
         let url = 'http://localhost:8000/download/' + mode + '/' + videoId;
         console.log('url for browser download: ' + url);
@@ -56,11 +56,11 @@ function triggerBrowserDownload(videoId, mode) {
         } else {
             link.click();
         }
-    } else {
-        // Force file download (whether supported by server).
-        let query = '?download';
-        window.open(url + query, '_self');
-    }
+    // } else {
+    //     // Force file download (whether supported by server).
+    //     let query = '?download';
+    //     window.open(url + query, '_self');
+    // }
 }
 
 function isChrome() {
