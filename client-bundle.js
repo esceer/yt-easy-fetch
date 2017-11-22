@@ -1,4 +1,4479 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+let ytdl = require('ytdl-core');
+
+document.getElementById('url-form').addEventListener('submit', download);
+
+let switchBtn = document.getElementById('switch-button');
+switchBtn.addEventListener('click', switchMode);
+
+function download(e) {
+    try {
+        // Getting the url of the video
+        let url = document.getElementById('vid-url').value;
+        console.log('youtube vid url: ', url);
+
+        // Fetching details
+        let videoId = getVideoIdWithQueryParams(url);
+        console.log('video id:', videoId);
+
+        // Trigger downloading the video via the browser
+        triggerBrowserDownload(videoId, isAudioOnly() ? 'audio' : 'video');
+
+    } catch(ex) {
+        console.log('err: ' + ex);
+        alert('Something went wrong: ' + ex);
+    }
+
+    e.preventDefault();
+}
+
+function getVideoIdWithQueryParams(url) {
+    let videoId = ytdl.getVideoID(url);
+    return url.slice(url.indexOf(videoId));
+}
+
+function triggerBrowserDownload(videoId, mode) {
+    // if (isChrome()) {
+        // Preparing the file
+        let url = 'http://localhost:8000/download/' + mode + '/' + videoId;
+        console.log('url for browser download: ' + url);
+
+        //Creating new link node.
+        let link = document.createElement('a');
+        link.href = url;
+
+        if (link.download !== undefined) {
+            //Set HTML5 download attribute. This will prevent file from opening if supported.
+            let fileName = 'video.mp4';
+            link.download = fileName;
+        }
+
+        //Dispatching click event.
+        if (document.createEvent) {
+            let event = document.createEvent('MouseEvents');
+            event.initEvent('click', true, true);
+            link.dispatchEvent(event);
+            window.URL.revokeObjectURL(url);
+        } else {
+            link.click();
+        }
+    // } else {
+    //     // Force file download (whether supported by server).
+    //     let query = '?download';
+    //     window.open(url + query, '_self');
+    // }
+}
+
+function isChrome() {
+    return navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+}
+
+function isAudioOnly() {
+    return 'Audio' === switchBtn.getAttribute('value');
+}
+
+function switchMode() {
+    switchBtn.setAttribute('value', isAudioOnly() ? 'Video' : 'Audio');
+}
+
+},{"ytdl-core":12}],2:[function(require,module,exports){
+module.exports = {
+  XmlEntities: require('./lib/xml-entities.js'),
+  Html4Entities: require('./lib/html4-entities.js'),
+  Html5Entities: require('./lib/html5-entities.js'),
+  AllHtmlEntities: require('./lib/html5-entities.js')
+};
+
+},{"./lib/html4-entities.js":3,"./lib/html5-entities.js":4,"./lib/xml-entities.js":5}],3:[function(require,module,exports){
+var HTML_ALPHA = ['apos', 'nbsp', 'iexcl', 'cent', 'pound', 'curren', 'yen', 'brvbar', 'sect', 'uml', 'copy', 'ordf', 'laquo', 'not', 'shy', 'reg', 'macr', 'deg', 'plusmn', 'sup2', 'sup3', 'acute', 'micro', 'para', 'middot', 'cedil', 'sup1', 'ordm', 'raquo', 'frac14', 'frac12', 'frac34', 'iquest', 'Agrave', 'Aacute', 'Acirc', 'Atilde', 'Auml', 'Aring', 'Aelig', 'Ccedil', 'Egrave', 'Eacute', 'Ecirc', 'Euml', 'Igrave', 'Iacute', 'Icirc', 'Iuml', 'ETH', 'Ntilde', 'Ograve', 'Oacute', 'Ocirc', 'Otilde', 'Ouml', 'times', 'Oslash', 'Ugrave', 'Uacute', 'Ucirc', 'Uuml', 'Yacute', 'THORN', 'szlig', 'agrave', 'aacute', 'acirc', 'atilde', 'auml', 'aring', 'aelig', 'ccedil', 'egrave', 'eacute', 'ecirc', 'euml', 'igrave', 'iacute', 'icirc', 'iuml', 'eth', 'ntilde', 'ograve', 'oacute', 'ocirc', 'otilde', 'ouml', 'divide', 'oslash', 'ugrave', 'uacute', 'ucirc', 'uuml', 'yacute', 'thorn', 'yuml', 'quot', 'amp', 'lt', 'gt', 'OElig', 'oelig', 'Scaron', 'scaron', 'Yuml', 'circ', 'tilde', 'ensp', 'emsp', 'thinsp', 'zwnj', 'zwj', 'lrm', 'rlm', 'ndash', 'mdash', 'lsquo', 'rsquo', 'sbquo', 'ldquo', 'rdquo', 'bdquo', 'dagger', 'Dagger', 'permil', 'lsaquo', 'rsaquo', 'euro', 'fnof', 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega', 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigmaf', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'thetasym', 'upsih', 'piv', 'bull', 'hellip', 'prime', 'Prime', 'oline', 'frasl', 'weierp', 'image', 'real', 'trade', 'alefsym', 'larr', 'uarr', 'rarr', 'darr', 'harr', 'crarr', 'lArr', 'uArr', 'rArr', 'dArr', 'hArr', 'forall', 'part', 'exist', 'empty', 'nabla', 'isin', 'notin', 'ni', 'prod', 'sum', 'minus', 'lowast', 'radic', 'prop', 'infin', 'ang', 'and', 'or', 'cap', 'cup', 'int', 'there4', 'sim', 'cong', 'asymp', 'ne', 'equiv', 'le', 'ge', 'sub', 'sup', 'nsub', 'sube', 'supe', 'oplus', 'otimes', 'perp', 'sdot', 'lceil', 'rceil', 'lfloor', 'rfloor', 'lang', 'rang', 'loz', 'spades', 'clubs', 'hearts', 'diams'];
+var HTML_CODES = [39, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 34, 38, 60, 62, 338, 339, 352, 353, 376, 710, 732, 8194, 8195, 8201, 8204, 8205, 8206, 8207, 8211, 8212, 8216, 8217, 8218, 8220, 8221, 8222, 8224, 8225, 8240, 8249, 8250, 8364, 402, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925, 926, 927, 928, 929, 931, 932, 933, 934, 935, 936, 937, 945, 946, 947, 948, 949, 950, 951, 952, 953, 954, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 966, 967, 968, 969, 977, 978, 982, 8226, 8230, 8242, 8243, 8254, 8260, 8472, 8465, 8476, 8482, 8501, 8592, 8593, 8594, 8595, 8596, 8629, 8656, 8657, 8658, 8659, 8660, 8704, 8706, 8707, 8709, 8711, 8712, 8713, 8715, 8719, 8721, 8722, 8727, 8730, 8733, 8734, 8736, 8743, 8744, 8745, 8746, 8747, 8756, 8764, 8773, 8776, 8800, 8801, 8804, 8805, 8834, 8835, 8836, 8838, 8839, 8853, 8855, 8869, 8901, 8968, 8969, 8970, 8971, 9001, 9002, 9674, 9824, 9827, 9829, 9830];
+
+var alphaIndex = {};
+var numIndex = {};
+
+var i = 0;
+var length = HTML_ALPHA.length;
+while (i < length) {
+    var a = HTML_ALPHA[i];
+    var c = HTML_CODES[i];
+    alphaIndex[a] = String.fromCharCode(c);
+    numIndex[c] = a;
+    i++;
+}
+
+/**
+ * @constructor
+ */
+function Html4Entities() {}
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html4Entities.prototype.decode = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    return str.replace(/&(#?[\w\d]+);?/g, function(s, entity) {
+        var chr;
+        if (entity.charAt(0) === "#") {
+            var code = entity.charAt(1).toLowerCase() === 'x' ?
+                parseInt(entity.substr(2), 16) :
+                parseInt(entity.substr(1));
+
+            if (!(isNaN(code) || code < -32768 || code > 65535)) {
+                chr = String.fromCharCode(code);
+            }
+        } else {
+            chr = alphaIndex[entity];
+        }
+        return chr || s;
+    });
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html4Entities.decode = function(str) {
+    return new Html4Entities().decode(str);
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html4Entities.prototype.encode = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    var strLength = str.length;
+    var result = '';
+    var i = 0;
+    while (i < strLength) {
+        var alpha = numIndex[str.charCodeAt(i)];
+        result += alpha ? "&" + alpha + ";" : str.charAt(i);
+        i++;
+    }
+    return result;
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html4Entities.encode = function(str) {
+    return new Html4Entities().encode(str);
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html4Entities.prototype.encodeNonUTF = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    var strLength = str.length;
+    var result = '';
+    var i = 0;
+    while (i < strLength) {
+        var cc = str.charCodeAt(i);
+        var alpha = numIndex[cc];
+        if (alpha) {
+            result += "&" + alpha + ";";
+        } else if (cc < 32 || cc > 126) {
+            result += "&#" + cc + ";";
+        } else {
+            result += str.charAt(i);
+        }
+        i++;
+    }
+    return result;
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html4Entities.encodeNonUTF = function(str) {
+    return new Html4Entities().encodeNonUTF(str);
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html4Entities.prototype.encodeNonASCII = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    var strLength = str.length;
+    var result = '';
+    var i = 0;
+    while (i < strLength) {
+        var c = str.charCodeAt(i);
+        if (c <= 255) {
+            result += str[i++];
+            continue;
+        }
+        result += '&#' + c + ';';
+        i++;
+    }
+    return result;
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html4Entities.encodeNonASCII = function(str) {
+    return new Html4Entities().encodeNonASCII(str);
+};
+
+module.exports = Html4Entities;
+
+},{}],4:[function(require,module,exports){
+var ENTITIES = [['Aacute', [193]], ['aacute', [225]], ['Abreve', [258]], ['abreve', [259]], ['ac', [8766]], ['acd', [8767]], ['acE', [8766, 819]], ['Acirc', [194]], ['acirc', [226]], ['acute', [180]], ['Acy', [1040]], ['acy', [1072]], ['AElig', [198]], ['aelig', [230]], ['af', [8289]], ['Afr', [120068]], ['afr', [120094]], ['Agrave', [192]], ['agrave', [224]], ['alefsym', [8501]], ['aleph', [8501]], ['Alpha', [913]], ['alpha', [945]], ['Amacr', [256]], ['amacr', [257]], ['amalg', [10815]], ['amp', [38]], ['AMP', [38]], ['andand', [10837]], ['And', [10835]], ['and', [8743]], ['andd', [10844]], ['andslope', [10840]], ['andv', [10842]], ['ang', [8736]], ['ange', [10660]], ['angle', [8736]], ['angmsdaa', [10664]], ['angmsdab', [10665]], ['angmsdac', [10666]], ['angmsdad', [10667]], ['angmsdae', [10668]], ['angmsdaf', [10669]], ['angmsdag', [10670]], ['angmsdah', [10671]], ['angmsd', [8737]], ['angrt', [8735]], ['angrtvb', [8894]], ['angrtvbd', [10653]], ['angsph', [8738]], ['angst', [197]], ['angzarr', [9084]], ['Aogon', [260]], ['aogon', [261]], ['Aopf', [120120]], ['aopf', [120146]], ['apacir', [10863]], ['ap', [8776]], ['apE', [10864]], ['ape', [8778]], ['apid', [8779]], ['apos', [39]], ['ApplyFunction', [8289]], ['approx', [8776]], ['approxeq', [8778]], ['Aring', [197]], ['aring', [229]], ['Ascr', [119964]], ['ascr', [119990]], ['Assign', [8788]], ['ast', [42]], ['asymp', [8776]], ['asympeq', [8781]], ['Atilde', [195]], ['atilde', [227]], ['Auml', [196]], ['auml', [228]], ['awconint', [8755]], ['awint', [10769]], ['backcong', [8780]], ['backepsilon', [1014]], ['backprime', [8245]], ['backsim', [8765]], ['backsimeq', [8909]], ['Backslash', [8726]], ['Barv', [10983]], ['barvee', [8893]], ['barwed', [8965]], ['Barwed', [8966]], ['barwedge', [8965]], ['bbrk', [9141]], ['bbrktbrk', [9142]], ['bcong', [8780]], ['Bcy', [1041]], ['bcy', [1073]], ['bdquo', [8222]], ['becaus', [8757]], ['because', [8757]], ['Because', [8757]], ['bemptyv', [10672]], ['bepsi', [1014]], ['bernou', [8492]], ['Bernoullis', [8492]], ['Beta', [914]], ['beta', [946]], ['beth', [8502]], ['between', [8812]], ['Bfr', [120069]], ['bfr', [120095]], ['bigcap', [8898]], ['bigcirc', [9711]], ['bigcup', [8899]], ['bigodot', [10752]], ['bigoplus', [10753]], ['bigotimes', [10754]], ['bigsqcup', [10758]], ['bigstar', [9733]], ['bigtriangledown', [9661]], ['bigtriangleup', [9651]], ['biguplus', [10756]], ['bigvee', [8897]], ['bigwedge', [8896]], ['bkarow', [10509]], ['blacklozenge', [10731]], ['blacksquare', [9642]], ['blacktriangle', [9652]], ['blacktriangledown', [9662]], ['blacktriangleleft', [9666]], ['blacktriangleright', [9656]], ['blank', [9251]], ['blk12', [9618]], ['blk14', [9617]], ['blk34', [9619]], ['block', [9608]], ['bne', [61, 8421]], ['bnequiv', [8801, 8421]], ['bNot', [10989]], ['bnot', [8976]], ['Bopf', [120121]], ['bopf', [120147]], ['bot', [8869]], ['bottom', [8869]], ['bowtie', [8904]], ['boxbox', [10697]], ['boxdl', [9488]], ['boxdL', [9557]], ['boxDl', [9558]], ['boxDL', [9559]], ['boxdr', [9484]], ['boxdR', [9554]], ['boxDr', [9555]], ['boxDR', [9556]], ['boxh', [9472]], ['boxH', [9552]], ['boxhd', [9516]], ['boxHd', [9572]], ['boxhD', [9573]], ['boxHD', [9574]], ['boxhu', [9524]], ['boxHu', [9575]], ['boxhU', [9576]], ['boxHU', [9577]], ['boxminus', [8863]], ['boxplus', [8862]], ['boxtimes', [8864]], ['boxul', [9496]], ['boxuL', [9563]], ['boxUl', [9564]], ['boxUL', [9565]], ['boxur', [9492]], ['boxuR', [9560]], ['boxUr', [9561]], ['boxUR', [9562]], ['boxv', [9474]], ['boxV', [9553]], ['boxvh', [9532]], ['boxvH', [9578]], ['boxVh', [9579]], ['boxVH', [9580]], ['boxvl', [9508]], ['boxvL', [9569]], ['boxVl', [9570]], ['boxVL', [9571]], ['boxvr', [9500]], ['boxvR', [9566]], ['boxVr', [9567]], ['boxVR', [9568]], ['bprime', [8245]], ['breve', [728]], ['Breve', [728]], ['brvbar', [166]], ['bscr', [119991]], ['Bscr', [8492]], ['bsemi', [8271]], ['bsim', [8765]], ['bsime', [8909]], ['bsolb', [10693]], ['bsol', [92]], ['bsolhsub', [10184]], ['bull', [8226]], ['bullet', [8226]], ['bump', [8782]], ['bumpE', [10926]], ['bumpe', [8783]], ['Bumpeq', [8782]], ['bumpeq', [8783]], ['Cacute', [262]], ['cacute', [263]], ['capand', [10820]], ['capbrcup', [10825]], ['capcap', [10827]], ['cap', [8745]], ['Cap', [8914]], ['capcup', [10823]], ['capdot', [10816]], ['CapitalDifferentialD', [8517]], ['caps', [8745, 65024]], ['caret', [8257]], ['caron', [711]], ['Cayleys', [8493]], ['ccaps', [10829]], ['Ccaron', [268]], ['ccaron', [269]], ['Ccedil', [199]], ['ccedil', [231]], ['Ccirc', [264]], ['ccirc', [265]], ['Cconint', [8752]], ['ccups', [10828]], ['ccupssm', [10832]], ['Cdot', [266]], ['cdot', [267]], ['cedil', [184]], ['Cedilla', [184]], ['cemptyv', [10674]], ['cent', [162]], ['centerdot', [183]], ['CenterDot', [183]], ['cfr', [120096]], ['Cfr', [8493]], ['CHcy', [1063]], ['chcy', [1095]], ['check', [10003]], ['checkmark', [10003]], ['Chi', [935]], ['chi', [967]], ['circ', [710]], ['circeq', [8791]], ['circlearrowleft', [8634]], ['circlearrowright', [8635]], ['circledast', [8859]], ['circledcirc', [8858]], ['circleddash', [8861]], ['CircleDot', [8857]], ['circledR', [174]], ['circledS', [9416]], ['CircleMinus', [8854]], ['CirclePlus', [8853]], ['CircleTimes', [8855]], ['cir', [9675]], ['cirE', [10691]], ['cire', [8791]], ['cirfnint', [10768]], ['cirmid', [10991]], ['cirscir', [10690]], ['ClockwiseContourIntegral', [8754]], ['clubs', [9827]], ['clubsuit', [9827]], ['colon', [58]], ['Colon', [8759]], ['Colone', [10868]], ['colone', [8788]], ['coloneq', [8788]], ['comma', [44]], ['commat', [64]], ['comp', [8705]], ['compfn', [8728]], ['complement', [8705]], ['complexes', [8450]], ['cong', [8773]], ['congdot', [10861]], ['Congruent', [8801]], ['conint', [8750]], ['Conint', [8751]], ['ContourIntegral', [8750]], ['copf', [120148]], ['Copf', [8450]], ['coprod', [8720]], ['Coproduct', [8720]], ['copy', [169]], ['COPY', [169]], ['copysr', [8471]], ['CounterClockwiseContourIntegral', [8755]], ['crarr', [8629]], ['cross', [10007]], ['Cross', [10799]], ['Cscr', [119966]], ['cscr', [119992]], ['csub', [10959]], ['csube', [10961]], ['csup', [10960]], ['csupe', [10962]], ['ctdot', [8943]], ['cudarrl', [10552]], ['cudarrr', [10549]], ['cuepr', [8926]], ['cuesc', [8927]], ['cularr', [8630]], ['cularrp', [10557]], ['cupbrcap', [10824]], ['cupcap', [10822]], ['CupCap', [8781]], ['cup', [8746]], ['Cup', [8915]], ['cupcup', [10826]], ['cupdot', [8845]], ['cupor', [10821]], ['cups', [8746, 65024]], ['curarr', [8631]], ['curarrm', [10556]], ['curlyeqprec', [8926]], ['curlyeqsucc', [8927]], ['curlyvee', [8910]], ['curlywedge', [8911]], ['curren', [164]], ['curvearrowleft', [8630]], ['curvearrowright', [8631]], ['cuvee', [8910]], ['cuwed', [8911]], ['cwconint', [8754]], ['cwint', [8753]], ['cylcty', [9005]], ['dagger', [8224]], ['Dagger', [8225]], ['daleth', [8504]], ['darr', [8595]], ['Darr', [8609]], ['dArr', [8659]], ['dash', [8208]], ['Dashv', [10980]], ['dashv', [8867]], ['dbkarow', [10511]], ['dblac', [733]], ['Dcaron', [270]], ['dcaron', [271]], ['Dcy', [1044]], ['dcy', [1076]], ['ddagger', [8225]], ['ddarr', [8650]], ['DD', [8517]], ['dd', [8518]], ['DDotrahd', [10513]], ['ddotseq', [10871]], ['deg', [176]], ['Del', [8711]], ['Delta', [916]], ['delta', [948]], ['demptyv', [10673]], ['dfisht', [10623]], ['Dfr', [120071]], ['dfr', [120097]], ['dHar', [10597]], ['dharl', [8643]], ['dharr', [8642]], ['DiacriticalAcute', [180]], ['DiacriticalDot', [729]], ['DiacriticalDoubleAcute', [733]], ['DiacriticalGrave', [96]], ['DiacriticalTilde', [732]], ['diam', [8900]], ['diamond', [8900]], ['Diamond', [8900]], ['diamondsuit', [9830]], ['diams', [9830]], ['die', [168]], ['DifferentialD', [8518]], ['digamma', [989]], ['disin', [8946]], ['div', [247]], ['divide', [247]], ['divideontimes', [8903]], ['divonx', [8903]], ['DJcy', [1026]], ['djcy', [1106]], ['dlcorn', [8990]], ['dlcrop', [8973]], ['dollar', [36]], ['Dopf', [120123]], ['dopf', [120149]], ['Dot', [168]], ['dot', [729]], ['DotDot', [8412]], ['doteq', [8784]], ['doteqdot', [8785]], ['DotEqual', [8784]], ['dotminus', [8760]], ['dotplus', [8724]], ['dotsquare', [8865]], ['doublebarwedge', [8966]], ['DoubleContourIntegral', [8751]], ['DoubleDot', [168]], ['DoubleDownArrow', [8659]], ['DoubleLeftArrow', [8656]], ['DoubleLeftRightArrow', [8660]], ['DoubleLeftTee', [10980]], ['DoubleLongLeftArrow', [10232]], ['DoubleLongLeftRightArrow', [10234]], ['DoubleLongRightArrow', [10233]], ['DoubleRightArrow', [8658]], ['DoubleRightTee', [8872]], ['DoubleUpArrow', [8657]], ['DoubleUpDownArrow', [8661]], ['DoubleVerticalBar', [8741]], ['DownArrowBar', [10515]], ['downarrow', [8595]], ['DownArrow', [8595]], ['Downarrow', [8659]], ['DownArrowUpArrow', [8693]], ['DownBreve', [785]], ['downdownarrows', [8650]], ['downharpoonleft', [8643]], ['downharpoonright', [8642]], ['DownLeftRightVector', [10576]], ['DownLeftTeeVector', [10590]], ['DownLeftVectorBar', [10582]], ['DownLeftVector', [8637]], ['DownRightTeeVector', [10591]], ['DownRightVectorBar', [10583]], ['DownRightVector', [8641]], ['DownTeeArrow', [8615]], ['DownTee', [8868]], ['drbkarow', [10512]], ['drcorn', [8991]], ['drcrop', [8972]], ['Dscr', [119967]], ['dscr', [119993]], ['DScy', [1029]], ['dscy', [1109]], ['dsol', [10742]], ['Dstrok', [272]], ['dstrok', [273]], ['dtdot', [8945]], ['dtri', [9663]], ['dtrif', [9662]], ['duarr', [8693]], ['duhar', [10607]], ['dwangle', [10662]], ['DZcy', [1039]], ['dzcy', [1119]], ['dzigrarr', [10239]], ['Eacute', [201]], ['eacute', [233]], ['easter', [10862]], ['Ecaron', [282]], ['ecaron', [283]], ['Ecirc', [202]], ['ecirc', [234]], ['ecir', [8790]], ['ecolon', [8789]], ['Ecy', [1069]], ['ecy', [1101]], ['eDDot', [10871]], ['Edot', [278]], ['edot', [279]], ['eDot', [8785]], ['ee', [8519]], ['efDot', [8786]], ['Efr', [120072]], ['efr', [120098]], ['eg', [10906]], ['Egrave', [200]], ['egrave', [232]], ['egs', [10902]], ['egsdot', [10904]], ['el', [10905]], ['Element', [8712]], ['elinters', [9191]], ['ell', [8467]], ['els', [10901]], ['elsdot', [10903]], ['Emacr', [274]], ['emacr', [275]], ['empty', [8709]], ['emptyset', [8709]], ['EmptySmallSquare', [9723]], ['emptyv', [8709]], ['EmptyVerySmallSquare', [9643]], ['emsp13', [8196]], ['emsp14', [8197]], ['emsp', [8195]], ['ENG', [330]], ['eng', [331]], ['ensp', [8194]], ['Eogon', [280]], ['eogon', [281]], ['Eopf', [120124]], ['eopf', [120150]], ['epar', [8917]], ['eparsl', [10723]], ['eplus', [10865]], ['epsi', [949]], ['Epsilon', [917]], ['epsilon', [949]], ['epsiv', [1013]], ['eqcirc', [8790]], ['eqcolon', [8789]], ['eqsim', [8770]], ['eqslantgtr', [10902]], ['eqslantless', [10901]], ['Equal', [10869]], ['equals', [61]], ['EqualTilde', [8770]], ['equest', [8799]], ['Equilibrium', [8652]], ['equiv', [8801]], ['equivDD', [10872]], ['eqvparsl', [10725]], ['erarr', [10609]], ['erDot', [8787]], ['escr', [8495]], ['Escr', [8496]], ['esdot', [8784]], ['Esim', [10867]], ['esim', [8770]], ['Eta', [919]], ['eta', [951]], ['ETH', [208]], ['eth', [240]], ['Euml', [203]], ['euml', [235]], ['euro', [8364]], ['excl', [33]], ['exist', [8707]], ['Exists', [8707]], ['expectation', [8496]], ['exponentiale', [8519]], ['ExponentialE', [8519]], ['fallingdotseq', [8786]], ['Fcy', [1060]], ['fcy', [1092]], ['female', [9792]], ['ffilig', [64259]], ['fflig', [64256]], ['ffllig', [64260]], ['Ffr', [120073]], ['ffr', [120099]], ['filig', [64257]], ['FilledSmallSquare', [9724]], ['FilledVerySmallSquare', [9642]], ['fjlig', [102, 106]], ['flat', [9837]], ['fllig', [64258]], ['fltns', [9649]], ['fnof', [402]], ['Fopf', [120125]], ['fopf', [120151]], ['forall', [8704]], ['ForAll', [8704]], ['fork', [8916]], ['forkv', [10969]], ['Fouriertrf', [8497]], ['fpartint', [10765]], ['frac12', [189]], ['frac13', [8531]], ['frac14', [188]], ['frac15', [8533]], ['frac16', [8537]], ['frac18', [8539]], ['frac23', [8532]], ['frac25', [8534]], ['frac34', [190]], ['frac35', [8535]], ['frac38', [8540]], ['frac45', [8536]], ['frac56', [8538]], ['frac58', [8541]], ['frac78', [8542]], ['frasl', [8260]], ['frown', [8994]], ['fscr', [119995]], ['Fscr', [8497]], ['gacute', [501]], ['Gamma', [915]], ['gamma', [947]], ['Gammad', [988]], ['gammad', [989]], ['gap', [10886]], ['Gbreve', [286]], ['gbreve', [287]], ['Gcedil', [290]], ['Gcirc', [284]], ['gcirc', [285]], ['Gcy', [1043]], ['gcy', [1075]], ['Gdot', [288]], ['gdot', [289]], ['ge', [8805]], ['gE', [8807]], ['gEl', [10892]], ['gel', [8923]], ['geq', [8805]], ['geqq', [8807]], ['geqslant', [10878]], ['gescc', [10921]], ['ges', [10878]], ['gesdot', [10880]], ['gesdoto', [10882]], ['gesdotol', [10884]], ['gesl', [8923, 65024]], ['gesles', [10900]], ['Gfr', [120074]], ['gfr', [120100]], ['gg', [8811]], ['Gg', [8921]], ['ggg', [8921]], ['gimel', [8503]], ['GJcy', [1027]], ['gjcy', [1107]], ['gla', [10917]], ['gl', [8823]], ['glE', [10898]], ['glj', [10916]], ['gnap', [10890]], ['gnapprox', [10890]], ['gne', [10888]], ['gnE', [8809]], ['gneq', [10888]], ['gneqq', [8809]], ['gnsim', [8935]], ['Gopf', [120126]], ['gopf', [120152]], ['grave', [96]], ['GreaterEqual', [8805]], ['GreaterEqualLess', [8923]], ['GreaterFullEqual', [8807]], ['GreaterGreater', [10914]], ['GreaterLess', [8823]], ['GreaterSlantEqual', [10878]], ['GreaterTilde', [8819]], ['Gscr', [119970]], ['gscr', [8458]], ['gsim', [8819]], ['gsime', [10894]], ['gsiml', [10896]], ['gtcc', [10919]], ['gtcir', [10874]], ['gt', [62]], ['GT', [62]], ['Gt', [8811]], ['gtdot', [8919]], ['gtlPar', [10645]], ['gtquest', [10876]], ['gtrapprox', [10886]], ['gtrarr', [10616]], ['gtrdot', [8919]], ['gtreqless', [8923]], ['gtreqqless', [10892]], ['gtrless', [8823]], ['gtrsim', [8819]], ['gvertneqq', [8809, 65024]], ['gvnE', [8809, 65024]], ['Hacek', [711]], ['hairsp', [8202]], ['half', [189]], ['hamilt', [8459]], ['HARDcy', [1066]], ['hardcy', [1098]], ['harrcir', [10568]], ['harr', [8596]], ['hArr', [8660]], ['harrw', [8621]], ['Hat', [94]], ['hbar', [8463]], ['Hcirc', [292]], ['hcirc', [293]], ['hearts', [9829]], ['heartsuit', [9829]], ['hellip', [8230]], ['hercon', [8889]], ['hfr', [120101]], ['Hfr', [8460]], ['HilbertSpace', [8459]], ['hksearow', [10533]], ['hkswarow', [10534]], ['hoarr', [8703]], ['homtht', [8763]], ['hookleftarrow', [8617]], ['hookrightarrow', [8618]], ['hopf', [120153]], ['Hopf', [8461]], ['horbar', [8213]], ['HorizontalLine', [9472]], ['hscr', [119997]], ['Hscr', [8459]], ['hslash', [8463]], ['Hstrok', [294]], ['hstrok', [295]], ['HumpDownHump', [8782]], ['HumpEqual', [8783]], ['hybull', [8259]], ['hyphen', [8208]], ['Iacute', [205]], ['iacute', [237]], ['ic', [8291]], ['Icirc', [206]], ['icirc', [238]], ['Icy', [1048]], ['icy', [1080]], ['Idot', [304]], ['IEcy', [1045]], ['iecy', [1077]], ['iexcl', [161]], ['iff', [8660]], ['ifr', [120102]], ['Ifr', [8465]], ['Igrave', [204]], ['igrave', [236]], ['ii', [8520]], ['iiiint', [10764]], ['iiint', [8749]], ['iinfin', [10716]], ['iiota', [8489]], ['IJlig', [306]], ['ijlig', [307]], ['Imacr', [298]], ['imacr', [299]], ['image', [8465]], ['ImaginaryI', [8520]], ['imagline', [8464]], ['imagpart', [8465]], ['imath', [305]], ['Im', [8465]], ['imof', [8887]], ['imped', [437]], ['Implies', [8658]], ['incare', [8453]], ['in', [8712]], ['infin', [8734]], ['infintie', [10717]], ['inodot', [305]], ['intcal', [8890]], ['int', [8747]], ['Int', [8748]], ['integers', [8484]], ['Integral', [8747]], ['intercal', [8890]], ['Intersection', [8898]], ['intlarhk', [10775]], ['intprod', [10812]], ['InvisibleComma', [8291]], ['InvisibleTimes', [8290]], ['IOcy', [1025]], ['iocy', [1105]], ['Iogon', [302]], ['iogon', [303]], ['Iopf', [120128]], ['iopf', [120154]], ['Iota', [921]], ['iota', [953]], ['iprod', [10812]], ['iquest', [191]], ['iscr', [119998]], ['Iscr', [8464]], ['isin', [8712]], ['isindot', [8949]], ['isinE', [8953]], ['isins', [8948]], ['isinsv', [8947]], ['isinv', [8712]], ['it', [8290]], ['Itilde', [296]], ['itilde', [297]], ['Iukcy', [1030]], ['iukcy', [1110]], ['Iuml', [207]], ['iuml', [239]], ['Jcirc', [308]], ['jcirc', [309]], ['Jcy', [1049]], ['jcy', [1081]], ['Jfr', [120077]], ['jfr', [120103]], ['jmath', [567]], ['Jopf', [120129]], ['jopf', [120155]], ['Jscr', [119973]], ['jscr', [119999]], ['Jsercy', [1032]], ['jsercy', [1112]], ['Jukcy', [1028]], ['jukcy', [1108]], ['Kappa', [922]], ['kappa', [954]], ['kappav', [1008]], ['Kcedil', [310]], ['kcedil', [311]], ['Kcy', [1050]], ['kcy', [1082]], ['Kfr', [120078]], ['kfr', [120104]], ['kgreen', [312]], ['KHcy', [1061]], ['khcy', [1093]], ['KJcy', [1036]], ['kjcy', [1116]], ['Kopf', [120130]], ['kopf', [120156]], ['Kscr', [119974]], ['kscr', [120000]], ['lAarr', [8666]], ['Lacute', [313]], ['lacute', [314]], ['laemptyv', [10676]], ['lagran', [8466]], ['Lambda', [923]], ['lambda', [955]], ['lang', [10216]], ['Lang', [10218]], ['langd', [10641]], ['langle', [10216]], ['lap', [10885]], ['Laplacetrf', [8466]], ['laquo', [171]], ['larrb', [8676]], ['larrbfs', [10527]], ['larr', [8592]], ['Larr', [8606]], ['lArr', [8656]], ['larrfs', [10525]], ['larrhk', [8617]], ['larrlp', [8619]], ['larrpl', [10553]], ['larrsim', [10611]], ['larrtl', [8610]], ['latail', [10521]], ['lAtail', [10523]], ['lat', [10923]], ['late', [10925]], ['lates', [10925, 65024]], ['lbarr', [10508]], ['lBarr', [10510]], ['lbbrk', [10098]], ['lbrace', [123]], ['lbrack', [91]], ['lbrke', [10635]], ['lbrksld', [10639]], ['lbrkslu', [10637]], ['Lcaron', [317]], ['lcaron', [318]], ['Lcedil', [315]], ['lcedil', [316]], ['lceil', [8968]], ['lcub', [123]], ['Lcy', [1051]], ['lcy', [1083]], ['ldca', [10550]], ['ldquo', [8220]], ['ldquor', [8222]], ['ldrdhar', [10599]], ['ldrushar', [10571]], ['ldsh', [8626]], ['le', [8804]], ['lE', [8806]], ['LeftAngleBracket', [10216]], ['LeftArrowBar', [8676]], ['leftarrow', [8592]], ['LeftArrow', [8592]], ['Leftarrow', [8656]], ['LeftArrowRightArrow', [8646]], ['leftarrowtail', [8610]], ['LeftCeiling', [8968]], ['LeftDoubleBracket', [10214]], ['LeftDownTeeVector', [10593]], ['LeftDownVectorBar', [10585]], ['LeftDownVector', [8643]], ['LeftFloor', [8970]], ['leftharpoondown', [8637]], ['leftharpoonup', [8636]], ['leftleftarrows', [8647]], ['leftrightarrow', [8596]], ['LeftRightArrow', [8596]], ['Leftrightarrow', [8660]], ['leftrightarrows', [8646]], ['leftrightharpoons', [8651]], ['leftrightsquigarrow', [8621]], ['LeftRightVector', [10574]], ['LeftTeeArrow', [8612]], ['LeftTee', [8867]], ['LeftTeeVector', [10586]], ['leftthreetimes', [8907]], ['LeftTriangleBar', [10703]], ['LeftTriangle', [8882]], ['LeftTriangleEqual', [8884]], ['LeftUpDownVector', [10577]], ['LeftUpTeeVector', [10592]], ['LeftUpVectorBar', [10584]], ['LeftUpVector', [8639]], ['LeftVectorBar', [10578]], ['LeftVector', [8636]], ['lEg', [10891]], ['leg', [8922]], ['leq', [8804]], ['leqq', [8806]], ['leqslant', [10877]], ['lescc', [10920]], ['les', [10877]], ['lesdot', [10879]], ['lesdoto', [10881]], ['lesdotor', [10883]], ['lesg', [8922, 65024]], ['lesges', [10899]], ['lessapprox', [10885]], ['lessdot', [8918]], ['lesseqgtr', [8922]], ['lesseqqgtr', [10891]], ['LessEqualGreater', [8922]], ['LessFullEqual', [8806]], ['LessGreater', [8822]], ['lessgtr', [8822]], ['LessLess', [10913]], ['lesssim', [8818]], ['LessSlantEqual', [10877]], ['LessTilde', [8818]], ['lfisht', [10620]], ['lfloor', [8970]], ['Lfr', [120079]], ['lfr', [120105]], ['lg', [8822]], ['lgE', [10897]], ['lHar', [10594]], ['lhard', [8637]], ['lharu', [8636]], ['lharul', [10602]], ['lhblk', [9604]], ['LJcy', [1033]], ['ljcy', [1113]], ['llarr', [8647]], ['ll', [8810]], ['Ll', [8920]], ['llcorner', [8990]], ['Lleftarrow', [8666]], ['llhard', [10603]], ['lltri', [9722]], ['Lmidot', [319]], ['lmidot', [320]], ['lmoustache', [9136]], ['lmoust', [9136]], ['lnap', [10889]], ['lnapprox', [10889]], ['lne', [10887]], ['lnE', [8808]], ['lneq', [10887]], ['lneqq', [8808]], ['lnsim', [8934]], ['loang', [10220]], ['loarr', [8701]], ['lobrk', [10214]], ['longleftarrow', [10229]], ['LongLeftArrow', [10229]], ['Longleftarrow', [10232]], ['longleftrightarrow', [10231]], ['LongLeftRightArrow', [10231]], ['Longleftrightarrow', [10234]], ['longmapsto', [10236]], ['longrightarrow', [10230]], ['LongRightArrow', [10230]], ['Longrightarrow', [10233]], ['looparrowleft', [8619]], ['looparrowright', [8620]], ['lopar', [10629]], ['Lopf', [120131]], ['lopf', [120157]], ['loplus', [10797]], ['lotimes', [10804]], ['lowast', [8727]], ['lowbar', [95]], ['LowerLeftArrow', [8601]], ['LowerRightArrow', [8600]], ['loz', [9674]], ['lozenge', [9674]], ['lozf', [10731]], ['lpar', [40]], ['lparlt', [10643]], ['lrarr', [8646]], ['lrcorner', [8991]], ['lrhar', [8651]], ['lrhard', [10605]], ['lrm', [8206]], ['lrtri', [8895]], ['lsaquo', [8249]], ['lscr', [120001]], ['Lscr', [8466]], ['lsh', [8624]], ['Lsh', [8624]], ['lsim', [8818]], ['lsime', [10893]], ['lsimg', [10895]], ['lsqb', [91]], ['lsquo', [8216]], ['lsquor', [8218]], ['Lstrok', [321]], ['lstrok', [322]], ['ltcc', [10918]], ['ltcir', [10873]], ['lt', [60]], ['LT', [60]], ['Lt', [8810]], ['ltdot', [8918]], ['lthree', [8907]], ['ltimes', [8905]], ['ltlarr', [10614]], ['ltquest', [10875]], ['ltri', [9667]], ['ltrie', [8884]], ['ltrif', [9666]], ['ltrPar', [10646]], ['lurdshar', [10570]], ['luruhar', [10598]], ['lvertneqq', [8808, 65024]], ['lvnE', [8808, 65024]], ['macr', [175]], ['male', [9794]], ['malt', [10016]], ['maltese', [10016]], ['Map', [10501]], ['map', [8614]], ['mapsto', [8614]], ['mapstodown', [8615]], ['mapstoleft', [8612]], ['mapstoup', [8613]], ['marker', [9646]], ['mcomma', [10793]], ['Mcy', [1052]], ['mcy', [1084]], ['mdash', [8212]], ['mDDot', [8762]], ['measuredangle', [8737]], ['MediumSpace', [8287]], ['Mellintrf', [8499]], ['Mfr', [120080]], ['mfr', [120106]], ['mho', [8487]], ['micro', [181]], ['midast', [42]], ['midcir', [10992]], ['mid', [8739]], ['middot', [183]], ['minusb', [8863]], ['minus', [8722]], ['minusd', [8760]], ['minusdu', [10794]], ['MinusPlus', [8723]], ['mlcp', [10971]], ['mldr', [8230]], ['mnplus', [8723]], ['models', [8871]], ['Mopf', [120132]], ['mopf', [120158]], ['mp', [8723]], ['mscr', [120002]], ['Mscr', [8499]], ['mstpos', [8766]], ['Mu', [924]], ['mu', [956]], ['multimap', [8888]], ['mumap', [8888]], ['nabla', [8711]], ['Nacute', [323]], ['nacute', [324]], ['nang', [8736, 8402]], ['nap', [8777]], ['napE', [10864, 824]], ['napid', [8779, 824]], ['napos', [329]], ['napprox', [8777]], ['natural', [9838]], ['naturals', [8469]], ['natur', [9838]], ['nbsp', [160]], ['nbump', [8782, 824]], ['nbumpe', [8783, 824]], ['ncap', [10819]], ['Ncaron', [327]], ['ncaron', [328]], ['Ncedil', [325]], ['ncedil', [326]], ['ncong', [8775]], ['ncongdot', [10861, 824]], ['ncup', [10818]], ['Ncy', [1053]], ['ncy', [1085]], ['ndash', [8211]], ['nearhk', [10532]], ['nearr', [8599]], ['neArr', [8663]], ['nearrow', [8599]], ['ne', [8800]], ['nedot', [8784, 824]], ['NegativeMediumSpace', [8203]], ['NegativeThickSpace', [8203]], ['NegativeThinSpace', [8203]], ['NegativeVeryThinSpace', [8203]], ['nequiv', [8802]], ['nesear', [10536]], ['nesim', [8770, 824]], ['NestedGreaterGreater', [8811]], ['NestedLessLess', [8810]], ['nexist', [8708]], ['nexists', [8708]], ['Nfr', [120081]], ['nfr', [120107]], ['ngE', [8807, 824]], ['nge', [8817]], ['ngeq', [8817]], ['ngeqq', [8807, 824]], ['ngeqslant', [10878, 824]], ['nges', [10878, 824]], ['nGg', [8921, 824]], ['ngsim', [8821]], ['nGt', [8811, 8402]], ['ngt', [8815]], ['ngtr', [8815]], ['nGtv', [8811, 824]], ['nharr', [8622]], ['nhArr', [8654]], ['nhpar', [10994]], ['ni', [8715]], ['nis', [8956]], ['nisd', [8954]], ['niv', [8715]], ['NJcy', [1034]], ['njcy', [1114]], ['nlarr', [8602]], ['nlArr', [8653]], ['nldr', [8229]], ['nlE', [8806, 824]], ['nle', [8816]], ['nleftarrow', [8602]], ['nLeftarrow', [8653]], ['nleftrightarrow', [8622]], ['nLeftrightarrow', [8654]], ['nleq', [8816]], ['nleqq', [8806, 824]], ['nleqslant', [10877, 824]], ['nles', [10877, 824]], ['nless', [8814]], ['nLl', [8920, 824]], ['nlsim', [8820]], ['nLt', [8810, 8402]], ['nlt', [8814]], ['nltri', [8938]], ['nltrie', [8940]], ['nLtv', [8810, 824]], ['nmid', [8740]], ['NoBreak', [8288]], ['NonBreakingSpace', [160]], ['nopf', [120159]], ['Nopf', [8469]], ['Not', [10988]], ['not', [172]], ['NotCongruent', [8802]], ['NotCupCap', [8813]], ['NotDoubleVerticalBar', [8742]], ['NotElement', [8713]], ['NotEqual', [8800]], ['NotEqualTilde', [8770, 824]], ['NotExists', [8708]], ['NotGreater', [8815]], ['NotGreaterEqual', [8817]], ['NotGreaterFullEqual', [8807, 824]], ['NotGreaterGreater', [8811, 824]], ['NotGreaterLess', [8825]], ['NotGreaterSlantEqual', [10878, 824]], ['NotGreaterTilde', [8821]], ['NotHumpDownHump', [8782, 824]], ['NotHumpEqual', [8783, 824]], ['notin', [8713]], ['notindot', [8949, 824]], ['notinE', [8953, 824]], ['notinva', [8713]], ['notinvb', [8951]], ['notinvc', [8950]], ['NotLeftTriangleBar', [10703, 824]], ['NotLeftTriangle', [8938]], ['NotLeftTriangleEqual', [8940]], ['NotLess', [8814]], ['NotLessEqual', [8816]], ['NotLessGreater', [8824]], ['NotLessLess', [8810, 824]], ['NotLessSlantEqual', [10877, 824]], ['NotLessTilde', [8820]], ['NotNestedGreaterGreater', [10914, 824]], ['NotNestedLessLess', [10913, 824]], ['notni', [8716]], ['notniva', [8716]], ['notnivb', [8958]], ['notnivc', [8957]], ['NotPrecedes', [8832]], ['NotPrecedesEqual', [10927, 824]], ['NotPrecedesSlantEqual', [8928]], ['NotReverseElement', [8716]], ['NotRightTriangleBar', [10704, 824]], ['NotRightTriangle', [8939]], ['NotRightTriangleEqual', [8941]], ['NotSquareSubset', [8847, 824]], ['NotSquareSubsetEqual', [8930]], ['NotSquareSuperset', [8848, 824]], ['NotSquareSupersetEqual', [8931]], ['NotSubset', [8834, 8402]], ['NotSubsetEqual', [8840]], ['NotSucceeds', [8833]], ['NotSucceedsEqual', [10928, 824]], ['NotSucceedsSlantEqual', [8929]], ['NotSucceedsTilde', [8831, 824]], ['NotSuperset', [8835, 8402]], ['NotSupersetEqual', [8841]], ['NotTilde', [8769]], ['NotTildeEqual', [8772]], ['NotTildeFullEqual', [8775]], ['NotTildeTilde', [8777]], ['NotVerticalBar', [8740]], ['nparallel', [8742]], ['npar', [8742]], ['nparsl', [11005, 8421]], ['npart', [8706, 824]], ['npolint', [10772]], ['npr', [8832]], ['nprcue', [8928]], ['nprec', [8832]], ['npreceq', [10927, 824]], ['npre', [10927, 824]], ['nrarrc', [10547, 824]], ['nrarr', [8603]], ['nrArr', [8655]], ['nrarrw', [8605, 824]], ['nrightarrow', [8603]], ['nRightarrow', [8655]], ['nrtri', [8939]], ['nrtrie', [8941]], ['nsc', [8833]], ['nsccue', [8929]], ['nsce', [10928, 824]], ['Nscr', [119977]], ['nscr', [120003]], ['nshortmid', [8740]], ['nshortparallel', [8742]], ['nsim', [8769]], ['nsime', [8772]], ['nsimeq', [8772]], ['nsmid', [8740]], ['nspar', [8742]], ['nsqsube', [8930]], ['nsqsupe', [8931]], ['nsub', [8836]], ['nsubE', [10949, 824]], ['nsube', [8840]], ['nsubset', [8834, 8402]], ['nsubseteq', [8840]], ['nsubseteqq', [10949, 824]], ['nsucc', [8833]], ['nsucceq', [10928, 824]], ['nsup', [8837]], ['nsupE', [10950, 824]], ['nsupe', [8841]], ['nsupset', [8835, 8402]], ['nsupseteq', [8841]], ['nsupseteqq', [10950, 824]], ['ntgl', [8825]], ['Ntilde', [209]], ['ntilde', [241]], ['ntlg', [8824]], ['ntriangleleft', [8938]], ['ntrianglelefteq', [8940]], ['ntriangleright', [8939]], ['ntrianglerighteq', [8941]], ['Nu', [925]], ['nu', [957]], ['num', [35]], ['numero', [8470]], ['numsp', [8199]], ['nvap', [8781, 8402]], ['nvdash', [8876]], ['nvDash', [8877]], ['nVdash', [8878]], ['nVDash', [8879]], ['nvge', [8805, 8402]], ['nvgt', [62, 8402]], ['nvHarr', [10500]], ['nvinfin', [10718]], ['nvlArr', [10498]], ['nvle', [8804, 8402]], ['nvlt', [60, 8402]], ['nvltrie', [8884, 8402]], ['nvrArr', [10499]], ['nvrtrie', [8885, 8402]], ['nvsim', [8764, 8402]], ['nwarhk', [10531]], ['nwarr', [8598]], ['nwArr', [8662]], ['nwarrow', [8598]], ['nwnear', [10535]], ['Oacute', [211]], ['oacute', [243]], ['oast', [8859]], ['Ocirc', [212]], ['ocirc', [244]], ['ocir', [8858]], ['Ocy', [1054]], ['ocy', [1086]], ['odash', [8861]], ['Odblac', [336]], ['odblac', [337]], ['odiv', [10808]], ['odot', [8857]], ['odsold', [10684]], ['OElig', [338]], ['oelig', [339]], ['ofcir', [10687]], ['Ofr', [120082]], ['ofr', [120108]], ['ogon', [731]], ['Ograve', [210]], ['ograve', [242]], ['ogt', [10689]], ['ohbar', [10677]], ['ohm', [937]], ['oint', [8750]], ['olarr', [8634]], ['olcir', [10686]], ['olcross', [10683]], ['oline', [8254]], ['olt', [10688]], ['Omacr', [332]], ['omacr', [333]], ['Omega', [937]], ['omega', [969]], ['Omicron', [927]], ['omicron', [959]], ['omid', [10678]], ['ominus', [8854]], ['Oopf', [120134]], ['oopf', [120160]], ['opar', [10679]], ['OpenCurlyDoubleQuote', [8220]], ['OpenCurlyQuote', [8216]], ['operp', [10681]], ['oplus', [8853]], ['orarr', [8635]], ['Or', [10836]], ['or', [8744]], ['ord', [10845]], ['order', [8500]], ['orderof', [8500]], ['ordf', [170]], ['ordm', [186]], ['origof', [8886]], ['oror', [10838]], ['orslope', [10839]], ['orv', [10843]], ['oS', [9416]], ['Oscr', [119978]], ['oscr', [8500]], ['Oslash', [216]], ['oslash', [248]], ['osol', [8856]], ['Otilde', [213]], ['otilde', [245]], ['otimesas', [10806]], ['Otimes', [10807]], ['otimes', [8855]], ['Ouml', [214]], ['ouml', [246]], ['ovbar', [9021]], ['OverBar', [8254]], ['OverBrace', [9182]], ['OverBracket', [9140]], ['OverParenthesis', [9180]], ['para', [182]], ['parallel', [8741]], ['par', [8741]], ['parsim', [10995]], ['parsl', [11005]], ['part', [8706]], ['PartialD', [8706]], ['Pcy', [1055]], ['pcy', [1087]], ['percnt', [37]], ['period', [46]], ['permil', [8240]], ['perp', [8869]], ['pertenk', [8241]], ['Pfr', [120083]], ['pfr', [120109]], ['Phi', [934]], ['phi', [966]], ['phiv', [981]], ['phmmat', [8499]], ['phone', [9742]], ['Pi', [928]], ['pi', [960]], ['pitchfork', [8916]], ['piv', [982]], ['planck', [8463]], ['planckh', [8462]], ['plankv', [8463]], ['plusacir', [10787]], ['plusb', [8862]], ['pluscir', [10786]], ['plus', [43]], ['plusdo', [8724]], ['plusdu', [10789]], ['pluse', [10866]], ['PlusMinus', [177]], ['plusmn', [177]], ['plussim', [10790]], ['plustwo', [10791]], ['pm', [177]], ['Poincareplane', [8460]], ['pointint', [10773]], ['popf', [120161]], ['Popf', [8473]], ['pound', [163]], ['prap', [10935]], ['Pr', [10939]], ['pr', [8826]], ['prcue', [8828]], ['precapprox', [10935]], ['prec', [8826]], ['preccurlyeq', [8828]], ['Precedes', [8826]], ['PrecedesEqual', [10927]], ['PrecedesSlantEqual', [8828]], ['PrecedesTilde', [8830]], ['preceq', [10927]], ['precnapprox', [10937]], ['precneqq', [10933]], ['precnsim', [8936]], ['pre', [10927]], ['prE', [10931]], ['precsim', [8830]], ['prime', [8242]], ['Prime', [8243]], ['primes', [8473]], ['prnap', [10937]], ['prnE', [10933]], ['prnsim', [8936]], ['prod', [8719]], ['Product', [8719]], ['profalar', [9006]], ['profline', [8978]], ['profsurf', [8979]], ['prop', [8733]], ['Proportional', [8733]], ['Proportion', [8759]], ['propto', [8733]], ['prsim', [8830]], ['prurel', [8880]], ['Pscr', [119979]], ['pscr', [120005]], ['Psi', [936]], ['psi', [968]], ['puncsp', [8200]], ['Qfr', [120084]], ['qfr', [120110]], ['qint', [10764]], ['qopf', [120162]], ['Qopf', [8474]], ['qprime', [8279]], ['Qscr', [119980]], ['qscr', [120006]], ['quaternions', [8461]], ['quatint', [10774]], ['quest', [63]], ['questeq', [8799]], ['quot', [34]], ['QUOT', [34]], ['rAarr', [8667]], ['race', [8765, 817]], ['Racute', [340]], ['racute', [341]], ['radic', [8730]], ['raemptyv', [10675]], ['rang', [10217]], ['Rang', [10219]], ['rangd', [10642]], ['range', [10661]], ['rangle', [10217]], ['raquo', [187]], ['rarrap', [10613]], ['rarrb', [8677]], ['rarrbfs', [10528]], ['rarrc', [10547]], ['rarr', [8594]], ['Rarr', [8608]], ['rArr', [8658]], ['rarrfs', [10526]], ['rarrhk', [8618]], ['rarrlp', [8620]], ['rarrpl', [10565]], ['rarrsim', [10612]], ['Rarrtl', [10518]], ['rarrtl', [8611]], ['rarrw', [8605]], ['ratail', [10522]], ['rAtail', [10524]], ['ratio', [8758]], ['rationals', [8474]], ['rbarr', [10509]], ['rBarr', [10511]], ['RBarr', [10512]], ['rbbrk', [10099]], ['rbrace', [125]], ['rbrack', [93]], ['rbrke', [10636]], ['rbrksld', [10638]], ['rbrkslu', [10640]], ['Rcaron', [344]], ['rcaron', [345]], ['Rcedil', [342]], ['rcedil', [343]], ['rceil', [8969]], ['rcub', [125]], ['Rcy', [1056]], ['rcy', [1088]], ['rdca', [10551]], ['rdldhar', [10601]], ['rdquo', [8221]], ['rdquor', [8221]], ['CloseCurlyDoubleQuote', [8221]], ['rdsh', [8627]], ['real', [8476]], ['realine', [8475]], ['realpart', [8476]], ['reals', [8477]], ['Re', [8476]], ['rect', [9645]], ['reg', [174]], ['REG', [174]], ['ReverseElement', [8715]], ['ReverseEquilibrium', [8651]], ['ReverseUpEquilibrium', [10607]], ['rfisht', [10621]], ['rfloor', [8971]], ['rfr', [120111]], ['Rfr', [8476]], ['rHar', [10596]], ['rhard', [8641]], ['rharu', [8640]], ['rharul', [10604]], ['Rho', [929]], ['rho', [961]], ['rhov', [1009]], ['RightAngleBracket', [10217]], ['RightArrowBar', [8677]], ['rightarrow', [8594]], ['RightArrow', [8594]], ['Rightarrow', [8658]], ['RightArrowLeftArrow', [8644]], ['rightarrowtail', [8611]], ['RightCeiling', [8969]], ['RightDoubleBracket', [10215]], ['RightDownTeeVector', [10589]], ['RightDownVectorBar', [10581]], ['RightDownVector', [8642]], ['RightFloor', [8971]], ['rightharpoondown', [8641]], ['rightharpoonup', [8640]], ['rightleftarrows', [8644]], ['rightleftharpoons', [8652]], ['rightrightarrows', [8649]], ['rightsquigarrow', [8605]], ['RightTeeArrow', [8614]], ['RightTee', [8866]], ['RightTeeVector', [10587]], ['rightthreetimes', [8908]], ['RightTriangleBar', [10704]], ['RightTriangle', [8883]], ['RightTriangleEqual', [8885]], ['RightUpDownVector', [10575]], ['RightUpTeeVector', [10588]], ['RightUpVectorBar', [10580]], ['RightUpVector', [8638]], ['RightVectorBar', [10579]], ['RightVector', [8640]], ['ring', [730]], ['risingdotseq', [8787]], ['rlarr', [8644]], ['rlhar', [8652]], ['rlm', [8207]], ['rmoustache', [9137]], ['rmoust', [9137]], ['rnmid', [10990]], ['roang', [10221]], ['roarr', [8702]], ['robrk', [10215]], ['ropar', [10630]], ['ropf', [120163]], ['Ropf', [8477]], ['roplus', [10798]], ['rotimes', [10805]], ['RoundImplies', [10608]], ['rpar', [41]], ['rpargt', [10644]], ['rppolint', [10770]], ['rrarr', [8649]], ['Rrightarrow', [8667]], ['rsaquo', [8250]], ['rscr', [120007]], ['Rscr', [8475]], ['rsh', [8625]], ['Rsh', [8625]], ['rsqb', [93]], ['rsquo', [8217]], ['rsquor', [8217]], ['CloseCurlyQuote', [8217]], ['rthree', [8908]], ['rtimes', [8906]], ['rtri', [9657]], ['rtrie', [8885]], ['rtrif', [9656]], ['rtriltri', [10702]], ['RuleDelayed', [10740]], ['ruluhar', [10600]], ['rx', [8478]], ['Sacute', [346]], ['sacute', [347]], ['sbquo', [8218]], ['scap', [10936]], ['Scaron', [352]], ['scaron', [353]], ['Sc', [10940]], ['sc', [8827]], ['sccue', [8829]], ['sce', [10928]], ['scE', [10932]], ['Scedil', [350]], ['scedil', [351]], ['Scirc', [348]], ['scirc', [349]], ['scnap', [10938]], ['scnE', [10934]], ['scnsim', [8937]], ['scpolint', [10771]], ['scsim', [8831]], ['Scy', [1057]], ['scy', [1089]], ['sdotb', [8865]], ['sdot', [8901]], ['sdote', [10854]], ['searhk', [10533]], ['searr', [8600]], ['seArr', [8664]], ['searrow', [8600]], ['sect', [167]], ['semi', [59]], ['seswar', [10537]], ['setminus', [8726]], ['setmn', [8726]], ['sext', [10038]], ['Sfr', [120086]], ['sfr', [120112]], ['sfrown', [8994]], ['sharp', [9839]], ['SHCHcy', [1065]], ['shchcy', [1097]], ['SHcy', [1064]], ['shcy', [1096]], ['ShortDownArrow', [8595]], ['ShortLeftArrow', [8592]], ['shortmid', [8739]], ['shortparallel', [8741]], ['ShortRightArrow', [8594]], ['ShortUpArrow', [8593]], ['shy', [173]], ['Sigma', [931]], ['sigma', [963]], ['sigmaf', [962]], ['sigmav', [962]], ['sim', [8764]], ['simdot', [10858]], ['sime', [8771]], ['simeq', [8771]], ['simg', [10910]], ['simgE', [10912]], ['siml', [10909]], ['simlE', [10911]], ['simne', [8774]], ['simplus', [10788]], ['simrarr', [10610]], ['slarr', [8592]], ['SmallCircle', [8728]], ['smallsetminus', [8726]], ['smashp', [10803]], ['smeparsl', [10724]], ['smid', [8739]], ['smile', [8995]], ['smt', [10922]], ['smte', [10924]], ['smtes', [10924, 65024]], ['SOFTcy', [1068]], ['softcy', [1100]], ['solbar', [9023]], ['solb', [10692]], ['sol', [47]], ['Sopf', [120138]], ['sopf', [120164]], ['spades', [9824]], ['spadesuit', [9824]], ['spar', [8741]], ['sqcap', [8851]], ['sqcaps', [8851, 65024]], ['sqcup', [8852]], ['sqcups', [8852, 65024]], ['Sqrt', [8730]], ['sqsub', [8847]], ['sqsube', [8849]], ['sqsubset', [8847]], ['sqsubseteq', [8849]], ['sqsup', [8848]], ['sqsupe', [8850]], ['sqsupset', [8848]], ['sqsupseteq', [8850]], ['square', [9633]], ['Square', [9633]], ['SquareIntersection', [8851]], ['SquareSubset', [8847]], ['SquareSubsetEqual', [8849]], ['SquareSuperset', [8848]], ['SquareSupersetEqual', [8850]], ['SquareUnion', [8852]], ['squarf', [9642]], ['squ', [9633]], ['squf', [9642]], ['srarr', [8594]], ['Sscr', [119982]], ['sscr', [120008]], ['ssetmn', [8726]], ['ssmile', [8995]], ['sstarf', [8902]], ['Star', [8902]], ['star', [9734]], ['starf', [9733]], ['straightepsilon', [1013]], ['straightphi', [981]], ['strns', [175]], ['sub', [8834]], ['Sub', [8912]], ['subdot', [10941]], ['subE', [10949]], ['sube', [8838]], ['subedot', [10947]], ['submult', [10945]], ['subnE', [10955]], ['subne', [8842]], ['subplus', [10943]], ['subrarr', [10617]], ['subset', [8834]], ['Subset', [8912]], ['subseteq', [8838]], ['subseteqq', [10949]], ['SubsetEqual', [8838]], ['subsetneq', [8842]], ['subsetneqq', [10955]], ['subsim', [10951]], ['subsub', [10965]], ['subsup', [10963]], ['succapprox', [10936]], ['succ', [8827]], ['succcurlyeq', [8829]], ['Succeeds', [8827]], ['SucceedsEqual', [10928]], ['SucceedsSlantEqual', [8829]], ['SucceedsTilde', [8831]], ['succeq', [10928]], ['succnapprox', [10938]], ['succneqq', [10934]], ['succnsim', [8937]], ['succsim', [8831]], ['SuchThat', [8715]], ['sum', [8721]], ['Sum', [8721]], ['sung', [9834]], ['sup1', [185]], ['sup2', [178]], ['sup3', [179]], ['sup', [8835]], ['Sup', [8913]], ['supdot', [10942]], ['supdsub', [10968]], ['supE', [10950]], ['supe', [8839]], ['supedot', [10948]], ['Superset', [8835]], ['SupersetEqual', [8839]], ['suphsol', [10185]], ['suphsub', [10967]], ['suplarr', [10619]], ['supmult', [10946]], ['supnE', [10956]], ['supne', [8843]], ['supplus', [10944]], ['supset', [8835]], ['Supset', [8913]], ['supseteq', [8839]], ['supseteqq', [10950]], ['supsetneq', [8843]], ['supsetneqq', [10956]], ['supsim', [10952]], ['supsub', [10964]], ['supsup', [10966]], ['swarhk', [10534]], ['swarr', [8601]], ['swArr', [8665]], ['swarrow', [8601]], ['swnwar', [10538]], ['szlig', [223]], ['Tab', [9]], ['target', [8982]], ['Tau', [932]], ['tau', [964]], ['tbrk', [9140]], ['Tcaron', [356]], ['tcaron', [357]], ['Tcedil', [354]], ['tcedil', [355]], ['Tcy', [1058]], ['tcy', [1090]], ['tdot', [8411]], ['telrec', [8981]], ['Tfr', [120087]], ['tfr', [120113]], ['there4', [8756]], ['therefore', [8756]], ['Therefore', [8756]], ['Theta', [920]], ['theta', [952]], ['thetasym', [977]], ['thetav', [977]], ['thickapprox', [8776]], ['thicksim', [8764]], ['ThickSpace', [8287, 8202]], ['ThinSpace', [8201]], ['thinsp', [8201]], ['thkap', [8776]], ['thksim', [8764]], ['THORN', [222]], ['thorn', [254]], ['tilde', [732]], ['Tilde', [8764]], ['TildeEqual', [8771]], ['TildeFullEqual', [8773]], ['TildeTilde', [8776]], ['timesbar', [10801]], ['timesb', [8864]], ['times', [215]], ['timesd', [10800]], ['tint', [8749]], ['toea', [10536]], ['topbot', [9014]], ['topcir', [10993]], ['top', [8868]], ['Topf', [120139]], ['topf', [120165]], ['topfork', [10970]], ['tosa', [10537]], ['tprime', [8244]], ['trade', [8482]], ['TRADE', [8482]], ['triangle', [9653]], ['triangledown', [9663]], ['triangleleft', [9667]], ['trianglelefteq', [8884]], ['triangleq', [8796]], ['triangleright', [9657]], ['trianglerighteq', [8885]], ['tridot', [9708]], ['trie', [8796]], ['triminus', [10810]], ['TripleDot', [8411]], ['triplus', [10809]], ['trisb', [10701]], ['tritime', [10811]], ['trpezium', [9186]], ['Tscr', [119983]], ['tscr', [120009]], ['TScy', [1062]], ['tscy', [1094]], ['TSHcy', [1035]], ['tshcy', [1115]], ['Tstrok', [358]], ['tstrok', [359]], ['twixt', [8812]], ['twoheadleftarrow', [8606]], ['twoheadrightarrow', [8608]], ['Uacute', [218]], ['uacute', [250]], ['uarr', [8593]], ['Uarr', [8607]], ['uArr', [8657]], ['Uarrocir', [10569]], ['Ubrcy', [1038]], ['ubrcy', [1118]], ['Ubreve', [364]], ['ubreve', [365]], ['Ucirc', [219]], ['ucirc', [251]], ['Ucy', [1059]], ['ucy', [1091]], ['udarr', [8645]], ['Udblac', [368]], ['udblac', [369]], ['udhar', [10606]], ['ufisht', [10622]], ['Ufr', [120088]], ['ufr', [120114]], ['Ugrave', [217]], ['ugrave', [249]], ['uHar', [10595]], ['uharl', [8639]], ['uharr', [8638]], ['uhblk', [9600]], ['ulcorn', [8988]], ['ulcorner', [8988]], ['ulcrop', [8975]], ['ultri', [9720]], ['Umacr', [362]], ['umacr', [363]], ['uml', [168]], ['UnderBar', [95]], ['UnderBrace', [9183]], ['UnderBracket', [9141]], ['UnderParenthesis', [9181]], ['Union', [8899]], ['UnionPlus', [8846]], ['Uogon', [370]], ['uogon', [371]], ['Uopf', [120140]], ['uopf', [120166]], ['UpArrowBar', [10514]], ['uparrow', [8593]], ['UpArrow', [8593]], ['Uparrow', [8657]], ['UpArrowDownArrow', [8645]], ['updownarrow', [8597]], ['UpDownArrow', [8597]], ['Updownarrow', [8661]], ['UpEquilibrium', [10606]], ['upharpoonleft', [8639]], ['upharpoonright', [8638]], ['uplus', [8846]], ['UpperLeftArrow', [8598]], ['UpperRightArrow', [8599]], ['upsi', [965]], ['Upsi', [978]], ['upsih', [978]], ['Upsilon', [933]], ['upsilon', [965]], ['UpTeeArrow', [8613]], ['UpTee', [8869]], ['upuparrows', [8648]], ['urcorn', [8989]], ['urcorner', [8989]], ['urcrop', [8974]], ['Uring', [366]], ['uring', [367]], ['urtri', [9721]], ['Uscr', [119984]], ['uscr', [120010]], ['utdot', [8944]], ['Utilde', [360]], ['utilde', [361]], ['utri', [9653]], ['utrif', [9652]], ['uuarr', [8648]], ['Uuml', [220]], ['uuml', [252]], ['uwangle', [10663]], ['vangrt', [10652]], ['varepsilon', [1013]], ['varkappa', [1008]], ['varnothing', [8709]], ['varphi', [981]], ['varpi', [982]], ['varpropto', [8733]], ['varr', [8597]], ['vArr', [8661]], ['varrho', [1009]], ['varsigma', [962]], ['varsubsetneq', [8842, 65024]], ['varsubsetneqq', [10955, 65024]], ['varsupsetneq', [8843, 65024]], ['varsupsetneqq', [10956, 65024]], ['vartheta', [977]], ['vartriangleleft', [8882]], ['vartriangleright', [8883]], ['vBar', [10984]], ['Vbar', [10987]], ['vBarv', [10985]], ['Vcy', [1042]], ['vcy', [1074]], ['vdash', [8866]], ['vDash', [8872]], ['Vdash', [8873]], ['VDash', [8875]], ['Vdashl', [10982]], ['veebar', [8891]], ['vee', [8744]], ['Vee', [8897]], ['veeeq', [8794]], ['vellip', [8942]], ['verbar', [124]], ['Verbar', [8214]], ['vert', [124]], ['Vert', [8214]], ['VerticalBar', [8739]], ['VerticalLine', [124]], ['VerticalSeparator', [10072]], ['VerticalTilde', [8768]], ['VeryThinSpace', [8202]], ['Vfr', [120089]], ['vfr', [120115]], ['vltri', [8882]], ['vnsub', [8834, 8402]], ['vnsup', [8835, 8402]], ['Vopf', [120141]], ['vopf', [120167]], ['vprop', [8733]], ['vrtri', [8883]], ['Vscr', [119985]], ['vscr', [120011]], ['vsubnE', [10955, 65024]], ['vsubne', [8842, 65024]], ['vsupnE', [10956, 65024]], ['vsupne', [8843, 65024]], ['Vvdash', [8874]], ['vzigzag', [10650]], ['Wcirc', [372]], ['wcirc', [373]], ['wedbar', [10847]], ['wedge', [8743]], ['Wedge', [8896]], ['wedgeq', [8793]], ['weierp', [8472]], ['Wfr', [120090]], ['wfr', [120116]], ['Wopf', [120142]], ['wopf', [120168]], ['wp', [8472]], ['wr', [8768]], ['wreath', [8768]], ['Wscr', [119986]], ['wscr', [120012]], ['xcap', [8898]], ['xcirc', [9711]], ['xcup', [8899]], ['xdtri', [9661]], ['Xfr', [120091]], ['xfr', [120117]], ['xharr', [10231]], ['xhArr', [10234]], ['Xi', [926]], ['xi', [958]], ['xlarr', [10229]], ['xlArr', [10232]], ['xmap', [10236]], ['xnis', [8955]], ['xodot', [10752]], ['Xopf', [120143]], ['xopf', [120169]], ['xoplus', [10753]], ['xotime', [10754]], ['xrarr', [10230]], ['xrArr', [10233]], ['Xscr', [119987]], ['xscr', [120013]], ['xsqcup', [10758]], ['xuplus', [10756]], ['xutri', [9651]], ['xvee', [8897]], ['xwedge', [8896]], ['Yacute', [221]], ['yacute', [253]], ['YAcy', [1071]], ['yacy', [1103]], ['Ycirc', [374]], ['ycirc', [375]], ['Ycy', [1067]], ['ycy', [1099]], ['yen', [165]], ['Yfr', [120092]], ['yfr', [120118]], ['YIcy', [1031]], ['yicy', [1111]], ['Yopf', [120144]], ['yopf', [120170]], ['Yscr', [119988]], ['yscr', [120014]], ['YUcy', [1070]], ['yucy', [1102]], ['yuml', [255]], ['Yuml', [376]], ['Zacute', [377]], ['zacute', [378]], ['Zcaron', [381]], ['zcaron', [382]], ['Zcy', [1047]], ['zcy', [1079]], ['Zdot', [379]], ['zdot', [380]], ['zeetrf', [8488]], ['ZeroWidthSpace', [8203]], ['Zeta', [918]], ['zeta', [950]], ['zfr', [120119]], ['Zfr', [8488]], ['ZHcy', [1046]], ['zhcy', [1078]], ['zigrarr', [8669]], ['zopf', [120171]], ['Zopf', [8484]], ['Zscr', [119989]], ['zscr', [120015]], ['zwj', [8205]], ['zwnj', [8204]]];
+
+var alphaIndex = {};
+var charIndex = {};
+
+createIndexes(alphaIndex, charIndex);
+
+/**
+ * @constructor
+ */
+function Html5Entities() {}
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html5Entities.prototype.decode = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    return str.replace(/&(#?[\w\d]+);?/g, function(s, entity) {
+        var chr;
+        if (entity.charAt(0) === "#") {
+            var code = entity.charAt(1) === 'x' ?
+                parseInt(entity.substr(2).toLowerCase(), 16) :
+                parseInt(entity.substr(1));
+
+            if (!(isNaN(code) || code < -32768 || code > 65535)) {
+                chr = String.fromCharCode(code);
+            }
+        } else {
+            chr = alphaIndex[entity];
+        }
+        return chr || s;
+    });
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+ Html5Entities.decode = function(str) {
+    return new Html5Entities().decode(str);
+ };
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html5Entities.prototype.encode = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    var strLength = str.length;
+    var result = '';
+    var i = 0;
+    while (i < strLength) {
+        var charInfo = charIndex[str.charCodeAt(i)];
+        if (charInfo) {
+            var alpha = charInfo[str.charCodeAt(i + 1)];
+            if (alpha) {
+                i++;
+            } else {
+                alpha = charInfo[''];
+            }
+            if (alpha) {
+                result += "&" + alpha + ";";
+                i++;
+                continue;
+            }
+        }
+        result += str.charAt(i);
+        i++;
+    }
+    return result;
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+ Html5Entities.encode = function(str) {
+    return new Html5Entities().encode(str);
+ };
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html5Entities.prototype.encodeNonUTF = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    var strLength = str.length;
+    var result = '';
+    var i = 0;
+    while (i < strLength) {
+        var c = str.charCodeAt(i);
+        var charInfo = charIndex[c];
+        if (charInfo) {
+            var alpha = charInfo[str.charCodeAt(i + 1)];
+            if (alpha) {
+                i++;
+            } else {
+                alpha = charInfo[''];
+            }
+            if (alpha) {
+                result += "&" + alpha + ";";
+                i++;
+                continue;
+            }
+        }
+        if (c < 32 || c > 126) {
+            result += '&#' + c + ';';
+        } else {
+            result += str.charAt(i);
+        }
+        i++;
+    }
+    return result;
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+ Html5Entities.encodeNonUTF = function(str) {
+    return new Html5Entities().encodeNonUTF(str);
+ };
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+Html5Entities.prototype.encodeNonASCII = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    var strLength = str.length;
+    var result = '';
+    var i = 0;
+    while (i < strLength) {
+        var c = str.charCodeAt(i);
+        if (c <= 255) {
+            result += str[i++];
+            continue;
+        }
+        result += '&#' + c + ';';
+        i++
+    }
+    return result;
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+ Html5Entities.encodeNonASCII = function(str) {
+    return new Html5Entities().encodeNonASCII(str);
+ };
+
+/**
+ * @param {Object} alphaIndex Passed by reference.
+ * @param {Object} charIndex Passed by reference.
+ */
+function createIndexes(alphaIndex, charIndex) {
+    var i = ENTITIES.length;
+    var _results = [];
+    while (i--) {
+        var e = ENTITIES[i];
+        var alpha = e[0];
+        var chars = e[1];
+        var chr = chars[0];
+        var addChar = (chr < 32 || chr > 126) || chr === 62 || chr === 60 || chr === 38 || chr === 34 || chr === 39;
+        var charInfo;
+        if (addChar) {
+            charInfo = charIndex[chr] = charIndex[chr] || {};
+        }
+        if (chars[1]) {
+            var chr2 = chars[1];
+            alphaIndex[alpha] = String.fromCharCode(chr) + String.fromCharCode(chr2);
+            _results.push(addChar && (charInfo[chr2] = alpha));
+        } else {
+            alphaIndex[alpha] = String.fromCharCode(chr);
+            _results.push(addChar && (charInfo[''] = alpha));
+        }
+    }
+}
+
+module.exports = Html5Entities;
+
+},{}],5:[function(require,module,exports){
+var ALPHA_INDEX = {
+    '&lt': '<',
+    '&gt': '>',
+    '&quot': '"',
+    '&apos': '\'',
+    '&amp': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&apos;': '\'',
+    '&amp;': '&'
+};
+
+var CHAR_INDEX = {
+    60: 'lt',
+    62: 'gt',
+    34: 'quot',
+    39: 'apos',
+    38: 'amp'
+};
+
+var CHAR_S_INDEX = {
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    '\'': '&apos;',
+    '&': '&amp;'
+};
+
+/**
+ * @constructor
+ */
+function XmlEntities() {}
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+XmlEntities.prototype.encode = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    return str.replace(/<|>|"|'|&/g, function(s) {
+        return CHAR_S_INDEX[s];
+    });
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+ XmlEntities.encode = function(str) {
+    return new XmlEntities().encode(str);
+ };
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+XmlEntities.prototype.decode = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    return str.replace(/&#?[0-9a-zA-Z]+;?/g, function(s) {
+        if (s.charAt(1) === '#') {
+            var code = s.charAt(2).toLowerCase() === 'x' ?
+                parseInt(s.substr(3), 16) :
+                parseInt(s.substr(2));
+
+            if (isNaN(code) || code < -32768 || code > 65535) {
+                return '';
+            }
+            return String.fromCharCode(code);
+        }
+        return ALPHA_INDEX[s] || s;
+    });
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+ XmlEntities.decode = function(str) {
+    return new XmlEntities().decode(str);
+ };
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+XmlEntities.prototype.encodeNonUTF = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    var strLength = str.length;
+    var result = '';
+    var i = 0;
+    while (i < strLength) {
+        var c = str.charCodeAt(i);
+        var alpha = CHAR_INDEX[c];
+        if (alpha) {
+            result += "&" + alpha + ";";
+            i++;
+            continue;
+        }
+        if (c < 32 || c > 126) {
+            result += '&#' + c + ';';
+        } else {
+            result += str.charAt(i);
+        }
+        i++;
+    }
+    return result;
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+ XmlEntities.encodeNonUTF = function(str) {
+    return new XmlEntities().encodeNonUTF(str);
+ };
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+XmlEntities.prototype.encodeNonASCII = function(str) {
+    if (!str || !str.length) {
+        return '';
+    }
+    var strLenght = str.length;
+    var result = '';
+    var i = 0;
+    while (i < strLenght) {
+        var c = str.charCodeAt(i);
+        if (c <= 255) {
+            result += str[i++];
+            continue;
+        }
+        result += '&#' + c + ';';
+        i++;
+    }
+    return result;
+};
+
+/**
+ * @param {String} str
+ * @returns {String}
+ */
+ XmlEntities.encodeNonASCII = function(str) {
+    return new XmlEntities().encodeNonASCII(str);
+ };
+
+module.exports = XmlEntities;
+
+},{}],6:[function(require,module,exports){
+const PassThrough = require('stream').PassThrough;
+const urlResolve  = require('url').resolve;
+const miniget     = require('miniget');
+const m3u8        = require('./m3u8-parser');
+const Queue       = require('./queue');
+
+
+/**
+ * @param {String} playlistURL
+ * @param {Object} options
+ * @return {stream.Readable}
+ */
+module.exports = (playlistURL, options) => {
+  var stream = new PassThrough();
+  options = options || {};
+  var chunkReadahead = options.chunkReadahead || 3;
+  var refreshInterval = options.refreshInterval || 600000; // 10 minutes
+  var requestOptions = options.requestOptions;
+
+  var latestSegment;
+  var streamQueue = new Queue((segment, callback) => {
+    latestSegment = segment;
+    segment.pipe(stream, { end: false });
+    segment.on('end', callback);
+  }, { concurrency: 1 });
+
+  var requestQueue = new Queue((segmentURL, callback) => {
+    var segment = miniget(urlResolve(playlistURL, segmentURL), requestOptions);
+    segment.on('error', callback);
+    streamQueue.push(segment, callback);
+  }, {
+    concurrency: chunkReadahead,
+    unique: (segmentURL) => segmentURL,
+  });
+
+  function onError(err) {
+    stream.emit('error', err);
+    // Stop on any error.
+    stream.end();
+  }
+
+  // When to look for items again.
+  var refreshThreshold;
+  var fetchingPlaylist = false;
+  var destroyed = false;
+  var ended = false;
+  function onQueuedEnd(err) {
+    if (err) {
+      onError(err);
+    } else if (!fetchingPlaylist && !destroyed && !ended &&
+      requestQueue.tasks.length + requestQueue.active === refreshThreshold) {
+      refreshPlaylist();
+    } else if (ended && !requestQueue.tasks.length && !requestQueue.active) {
+      stream.end();
+    }
+  }
+
+  var tid;
+  function refreshPlaylist() {
+    clearTimeout(tid);
+    fetchingPlaylist = true;
+    var req = miniget(playlistURL, requestOptions);
+    req.on('error', onError);
+    var parser = req.pipe(new m3u8());
+    parser.on('tag', (tagName) => {
+      if (tagName === 'EXT-X-ENDLIST') {
+        ended = true;
+        req.unpipe();
+        clearTimeout(tid);
+      }
+    });
+    var totalItems = 0;
+    parser.on('item', (item) => {
+      totalItems++;
+      requestQueue.push(item, onQueuedEnd);
+    });
+    parser.on('end', () => {
+      refreshThreshold = Math.ceil(totalItems * 0.01);
+      tid = setTimeout(refreshPlaylist, refreshInterval);
+      fetchingPlaylist = false;
+    });
+  }
+  refreshPlaylist();
+
+  stream.end = () => {
+    destroyed = true;
+    streamQueue.die();
+    requestQueue.die();
+    clearTimeout(tid);
+    if (latestSegment) { latestSegment.unpipe(); }
+    PassThrough.prototype.end.call(stream);
+  };
+
+  return stream;
+};
+
+},{"./m3u8-parser":7,"./queue":8,"miniget":9,"stream":47,"url":54}],7:[function(require,module,exports){
+'use strict';
+
+const Writable = require('stream').Writable;
+
+
+/**
+ * A very simple m3u8 playlist file parser that detects tags and segments.
+ *
+ * @extends WritableStream
+ * @constructor
+ */
+module.exports = class m3u8parser extends Writable {
+  constructor() {
+    super({ decodeStrings: false });
+    this._lastLine = '';
+    this.on('finish', () => {
+      this._parseLine(this._lastLine);
+      this.emit('end');
+    });
+  }
+
+  _parseLine(line) {
+    var tag = line.match(/^#(EXT[A-Z0-9-]+)(?::(.*))?/);
+    if (tag) {
+      // This is a tag.
+      this.emit('tag', tag[1], tag[2] || null);
+
+    } else if (!/^#/.test(line) && line.trim()) {
+      // This is a segment
+      this.emit('item', line.trim());
+    }
+  }
+
+  _write(chunk, encoding, callback) {
+    var lines = chunk.toString('utf8').split('\n');
+    if (this._lastLine) { lines[0] = this._lastLine + lines[0]; }
+    lines.forEach((line, i) => {
+      if (i < lines.length - 1) {
+        this._parseLine(line);
+      } else {
+        // Save the last line in case it has been broken up.
+        this._lastLine = line;
+      }
+    });
+    callback();
+  }
+};
+
+},{"stream":47}],8:[function(require,module,exports){
+'use strict';
+
+module.exports = class Queue {
+  /**
+   * A really simple queue with concurrency that optionally
+   * only adds unique tasks.
+   *
+   * @param {Function(Object, Function)} worker
+   * @param {Object} options
+   */
+  constructor(worker, options) {
+    this._worker = worker;
+    options = options || {};
+    this._concurrency = options.concurrency || 1;
+    this._unique = options.unique;
+    this._tasksMap = {};
+    this.tasks = [];
+    this.active = 0;
+  }
+
+
+  /**
+   * Push a task to the queue.
+   *
+   * @param {Object} item
+   * @param {Function(Error)} callback
+   */
+  push(item) {
+    if (this._unique) {
+      var key = this._unique(item);
+      if (this._tasksMap[key] === true) { return; }
+      this._tasksMap[key] = true;
+    }
+    this.tasks.push(arguments);
+    this._next();
+  }
+
+
+  /**
+   * Process next job in queue.
+   */
+  _next() {
+    if (this.active >= this._concurrency || !this.tasks.length) { return; }
+    var task = this.tasks.shift();
+    var item = task[0];
+    var callback = task[1];
+    var callbackCalled = false;
+    this.active++;
+    this._worker(item, (err) => {
+      if (callbackCalled) { return; }
+      if (this._unique) { delete this._tasksMap[this._unique(item)]; }
+      this.active--;
+      callbackCalled = true;
+      if (callback) { callback(err); }
+      this._next();
+    });
+  }
+
+
+  /**
+   * Stops processing queued jobs.
+   */
+  die() {
+    this.tasks = [];
+    this._tasksMap = {};
+  }
+};
+
+},{}],9:[function(require,module,exports){
+(function (process){
+const http        = require('http');
+const https       = require('https');
+const urlParse    = require('url').parse;
+const PassThrough = require('stream').PassThrough;
+
+
+const httpLibs = { 'http:': http, 'https:': https };
+const redirectCodes = { 301: true, 302: true, 303: true, 307: true };
+
+/**
+* @param {String} url
+* @param {!Object} options
+* @param {!Function(Error, http.IncomingMessage, String)} callback
+* @return {stream.Readable}
+*/
+module.exports = (url, options, callback) => {
+  if (typeof options === 'function') {
+    callback = options;
+    options = {};
+  } else if (!options) {
+    options = {};
+  }
+  var maxRedirects = options.maxRedirects || 3;
+  var stream = new PassThrough({ highWaterMark: options.highWaterMark });
+  var req, aborted = false;
+
+  function onError(err) {
+    if (callback) {
+      callback(err);
+    } else {
+      stream.emit('error', err);
+    }
+  }
+
+  function doDownload(url, tryCount) {
+    var parsed = urlParse(url);
+    var httpLib = httpLibs[parsed.protocol];
+    if (!httpLib) {
+      setImmediate(() => {
+        onError(new Error('Invalid URL: ' + url));
+      });
+      return stream;
+    }
+
+    for (var key in options) {
+      parsed[key] = options[key];
+    }
+    delete parsed.maxRedirects;
+    delete parsed.highWaterMark;
+    delete parsed.transform;
+    if (options.transform) {
+      var transform = options.transform;
+      parsed = transform(parsed);
+    }
+
+    req = httpLib.get(parsed, (res) => {
+      if (redirectCodes[res.statusCode] === true) {
+        if (tryCount >= maxRedirects) {
+          onError(new Error('Too many redirects'));
+        } else {
+          doDownload(res.headers.location, tryCount + 1);
+        }
+        return;
+      } else if (res.statusCode < 200 || 300 <= res.statusCode) {
+        onError(new Error('Status code: ' + res.statusCode));
+        return;
+      }
+      if (callback) {
+        var body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          body += chunk;
+        });
+        res.on('end', () => {
+          callback(null, res, body);
+        });
+      } else {
+        stream.emit('response', res);
+        res.on('error', onError);
+        res.pipe(stream);
+      }
+    });
+    req.on('error', onError);
+    if (aborted) { req.abort(); }
+    stream.emit('request', req);
+  }
+
+  stream.abort = () => {
+    aborted = true;
+    stream.emit('abort');
+    if (req) { req.abort(); }
+  };
+
+  process.nextTick(() => { doDownload(url, 1); });
+  return callback ? null : stream;
+};
+
+}).call(this,require('_process'))
+},{"_process":28,"http":48,"https":22,"stream":47,"url":54}],10:[function(require,module,exports){
+(function (Buffer){
+;(function (sax) { // wrapper for non-node envs
+  sax.parser = function (strict, opt) { return new SAXParser(strict, opt) }
+  sax.SAXParser = SAXParser
+  sax.SAXStream = SAXStream
+  sax.createStream = createStream
+
+  // When we pass the MAX_BUFFER_LENGTH position, start checking for buffer overruns.
+  // When we check, schedule the next check for MAX_BUFFER_LENGTH - (max(buffer lengths)),
+  // since that's the earliest that a buffer overrun could occur.  This way, checks are
+  // as rare as required, but as often as necessary to ensure never crossing this bound.
+  // Furthermore, buffers are only tested at most once per write(), so passing a very
+  // large string into write() might have undesirable effects, but this is manageable by
+  // the caller, so it is assumed to be safe.  Thus, a call to write() may, in the extreme
+  // edge case, result in creating at most one complete copy of the string passed in.
+  // Set to Infinity to have unlimited buffers.
+  sax.MAX_BUFFER_LENGTH = 64 * 1024
+
+  var buffers = [
+    'comment', 'sgmlDecl', 'textNode', 'tagName', 'doctype',
+    'procInstName', 'procInstBody', 'entity', 'attribName',
+    'attribValue', 'cdata', 'script'
+  ]
+
+  sax.EVENTS = [
+    'text',
+    'processinginstruction',
+    'sgmldeclaration',
+    'doctype',
+    'comment',
+    'opentagstart',
+    'attribute',
+    'opentag',
+    'closetag',
+    'opencdata',
+    'cdata',
+    'closecdata',
+    'error',
+    'end',
+    'ready',
+    'script',
+    'opennamespace',
+    'closenamespace'
+  ]
+
+  function SAXParser (strict, opt) {
+    if (!(this instanceof SAXParser)) {
+      return new SAXParser(strict, opt)
+    }
+
+    var parser = this
+    clearBuffers(parser)
+    parser.q = parser.c = ''
+    parser.bufferCheckPosition = sax.MAX_BUFFER_LENGTH
+    parser.opt = opt || {}
+    parser.opt.lowercase = parser.opt.lowercase || parser.opt.lowercasetags
+    parser.looseCase = parser.opt.lowercase ? 'toLowerCase' : 'toUpperCase'
+    parser.tags = []
+    parser.closed = parser.closedRoot = parser.sawRoot = false
+    parser.tag = parser.error = null
+    parser.strict = !!strict
+    parser.noscript = !!(strict || parser.opt.noscript)
+    parser.state = S.BEGIN
+    parser.strictEntities = parser.opt.strictEntities
+    parser.ENTITIES = parser.strictEntities ? Object.create(sax.XML_ENTITIES) : Object.create(sax.ENTITIES)
+    parser.attribList = []
+
+    // namespaces form a prototype chain.
+    // it always points at the current tag,
+    // which protos to its parent tag.
+    if (parser.opt.xmlns) {
+      parser.ns = Object.create(rootNS)
+    }
+
+    // mostly just for error reporting
+    parser.trackPosition = parser.opt.position !== false
+    if (parser.trackPosition) {
+      parser.position = parser.line = parser.column = 0
+    }
+    emit(parser, 'onready')
+  }
+
+  if (!Object.create) {
+    Object.create = function (o) {
+      function F () {}
+      F.prototype = o
+      var newf = new F()
+      return newf
+    }
+  }
+
+  if (!Object.keys) {
+    Object.keys = function (o) {
+      var a = []
+      for (var i in o) if (o.hasOwnProperty(i)) a.push(i)
+      return a
+    }
+  }
+
+  function checkBufferLength (parser) {
+    var maxAllowed = Math.max(sax.MAX_BUFFER_LENGTH, 10)
+    var maxActual = 0
+    for (var i = 0, l = buffers.length; i < l; i++) {
+      var len = parser[buffers[i]].length
+      if (len > maxAllowed) {
+        // Text/cdata nodes can get big, and since they're buffered,
+        // we can get here under normal conditions.
+        // Avoid issues by emitting the text node now,
+        // so at least it won't get any bigger.
+        switch (buffers[i]) {
+          case 'textNode':
+            closeText(parser)
+            break
+
+          case 'cdata':
+            emitNode(parser, 'oncdata', parser.cdata)
+            parser.cdata = ''
+            break
+
+          case 'script':
+            emitNode(parser, 'onscript', parser.script)
+            parser.script = ''
+            break
+
+          default:
+            error(parser, 'Max buffer length exceeded: ' + buffers[i])
+        }
+      }
+      maxActual = Math.max(maxActual, len)
+    }
+    // schedule the next check for the earliest possible buffer overrun.
+    var m = sax.MAX_BUFFER_LENGTH - maxActual
+    parser.bufferCheckPosition = m + parser.position
+  }
+
+  function clearBuffers (parser) {
+    for (var i = 0, l = buffers.length; i < l; i++) {
+      parser[buffers[i]] = ''
+    }
+  }
+
+  function flushBuffers (parser) {
+    closeText(parser)
+    if (parser.cdata !== '') {
+      emitNode(parser, 'oncdata', parser.cdata)
+      parser.cdata = ''
+    }
+    if (parser.script !== '') {
+      emitNode(parser, 'onscript', parser.script)
+      parser.script = ''
+    }
+  }
+
+  SAXParser.prototype = {
+    end: function () { end(this) },
+    write: write,
+    resume: function () { this.error = null; return this },
+    close: function () { return this.write(null) },
+    flush: function () { flushBuffers(this) }
+  }
+
+  var Stream
+  try {
+    Stream = require('stream').Stream
+  } catch (ex) {
+    Stream = function () {}
+  }
+
+  var streamWraps = sax.EVENTS.filter(function (ev) {
+    return ev !== 'error' && ev !== 'end'
+  })
+
+  function createStream (strict, opt) {
+    return new SAXStream(strict, opt)
+  }
+
+  function SAXStream (strict, opt) {
+    if (!(this instanceof SAXStream)) {
+      return new SAXStream(strict, opt)
+    }
+
+    Stream.apply(this)
+
+    this._parser = new SAXParser(strict, opt)
+    this.writable = true
+    this.readable = true
+
+    var me = this
+
+    this._parser.onend = function () {
+      me.emit('end')
+    }
+
+    this._parser.onerror = function (er) {
+      me.emit('error', er)
+
+      // if didn't throw, then means error was handled.
+      // go ahead and clear error, so we can write again.
+      me._parser.error = null
+    }
+
+    this._decoder = null
+
+    streamWraps.forEach(function (ev) {
+      Object.defineProperty(me, 'on' + ev, {
+        get: function () {
+          return me._parser['on' + ev]
+        },
+        set: function (h) {
+          if (!h) {
+            me.removeAllListeners(ev)
+            me._parser['on' + ev] = h
+            return h
+          }
+          me.on(ev, h)
+        },
+        enumerable: true,
+        configurable: false
+      })
+    })
+  }
+
+  SAXStream.prototype = Object.create(Stream.prototype, {
+    constructor: {
+      value: SAXStream
+    }
+  })
+
+  SAXStream.prototype.write = function (data) {
+    if (typeof Buffer === 'function' &&
+      typeof Buffer.isBuffer === 'function' &&
+      Buffer.isBuffer(data)) {
+      if (!this._decoder) {
+        var SD = require('string_decoder').StringDecoder
+        this._decoder = new SD('utf8')
+      }
+      data = this._decoder.write(data)
+    }
+
+    this._parser.write(data.toString())
+    this.emit('data', data)
+    return true
+  }
+
+  SAXStream.prototype.end = function (chunk) {
+    if (chunk && chunk.length) {
+      this.write(chunk)
+    }
+    this._parser.end()
+    return true
+  }
+
+  SAXStream.prototype.on = function (ev, handler) {
+    var me = this
+    if (!me._parser['on' + ev] && streamWraps.indexOf(ev) !== -1) {
+      me._parser['on' + ev] = function () {
+        var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null, arguments)
+        args.splice(0, 0, ev)
+        me.emit.apply(me, args)
+      }
+    }
+
+    return Stream.prototype.on.call(me, ev, handler)
+  }
+
+  // this really needs to be replaced with character classes.
+  // XML allows all manner of ridiculous numbers and digits.
+  var CDATA = '[CDATA['
+  var DOCTYPE = 'DOCTYPE'
+  var XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace'
+  var XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
+  var rootNS = { xml: XML_NAMESPACE, xmlns: XMLNS_NAMESPACE }
+
+  // http://www.w3.org/TR/REC-xml/#NT-NameStartChar
+  // This implementation works on strings, a single character at a time
+  // as such, it cannot ever support astral-plane characters (10000-EFFFF)
+  // without a significant breaking change to either this  parser, or the
+  // JavaScript language.  Implementation of an emoji-capable xml parser
+  // is left as an exercise for the reader.
+  var nameStart = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
+
+  var nameBody = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
+
+  var entityStart = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
+  var entityBody = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
+
+  function isWhitespace (c) {
+    return c === ' ' || c === '\n' || c === '\r' || c === '\t'
+  }
+
+  function isQuote (c) {
+    return c === '"' || c === '\''
+  }
+
+  function isAttribEnd (c) {
+    return c === '>' || isWhitespace(c)
+  }
+
+  function isMatch (regex, c) {
+    return regex.test(c)
+  }
+
+  function notMatch (regex, c) {
+    return !isMatch(regex, c)
+  }
+
+  var S = 0
+  sax.STATE = {
+    BEGIN: S++, // leading byte order mark or whitespace
+    BEGIN_WHITESPACE: S++, // leading whitespace
+    TEXT: S++, // general stuff
+    TEXT_ENTITY: S++, // &amp and such.
+    OPEN_WAKA: S++, // <
+    SGML_DECL: S++, // <!BLARG
+    SGML_DECL_QUOTED: S++, // <!BLARG foo "bar
+    DOCTYPE: S++, // <!DOCTYPE
+    DOCTYPE_QUOTED: S++, // <!DOCTYPE "//blah
+    DOCTYPE_DTD: S++, // <!DOCTYPE "//blah" [ ...
+    DOCTYPE_DTD_QUOTED: S++, // <!DOCTYPE "//blah" [ "foo
+    COMMENT_STARTING: S++, // <!-
+    COMMENT: S++, // <!--
+    COMMENT_ENDING: S++, // <!-- blah -
+    COMMENT_ENDED: S++, // <!-- blah --
+    CDATA: S++, // <![CDATA[ something
+    CDATA_ENDING: S++, // ]
+    CDATA_ENDING_2: S++, // ]]
+    PROC_INST: S++, // <?hi
+    PROC_INST_BODY: S++, // <?hi there
+    PROC_INST_ENDING: S++, // <?hi "there" ?
+    OPEN_TAG: S++, // <strong
+    OPEN_TAG_SLASH: S++, // <strong /
+    ATTRIB: S++, // <a
+    ATTRIB_NAME: S++, // <a foo
+    ATTRIB_NAME_SAW_WHITE: S++, // <a foo _
+    ATTRIB_VALUE: S++, // <a foo=
+    ATTRIB_VALUE_QUOTED: S++, // <a foo="bar
+    ATTRIB_VALUE_CLOSED: S++, // <a foo="bar"
+    ATTRIB_VALUE_UNQUOTED: S++, // <a foo=bar
+    ATTRIB_VALUE_ENTITY_Q: S++, // <foo bar="&quot;"
+    ATTRIB_VALUE_ENTITY_U: S++, // <foo bar=&quot
+    CLOSE_TAG: S++, // </a
+    CLOSE_TAG_SAW_WHITE: S++, // </a   >
+    SCRIPT: S++, // <script> ...
+    SCRIPT_ENDING: S++ // <script> ... <
+  }
+
+  sax.XML_ENTITIES = {
+    'amp': '&',
+    'gt': '>',
+    'lt': '<',
+    'quot': '"',
+    'apos': "'"
+  }
+
+  sax.ENTITIES = {
+    'amp': '&',
+    'gt': '>',
+    'lt': '<',
+    'quot': '"',
+    'apos': "'",
+    'AElig': 198,
+    'Aacute': 193,
+    'Acirc': 194,
+    'Agrave': 192,
+    'Aring': 197,
+    'Atilde': 195,
+    'Auml': 196,
+    'Ccedil': 199,
+    'ETH': 208,
+    'Eacute': 201,
+    'Ecirc': 202,
+    'Egrave': 200,
+    'Euml': 203,
+    'Iacute': 205,
+    'Icirc': 206,
+    'Igrave': 204,
+    'Iuml': 207,
+    'Ntilde': 209,
+    'Oacute': 211,
+    'Ocirc': 212,
+    'Ograve': 210,
+    'Oslash': 216,
+    'Otilde': 213,
+    'Ouml': 214,
+    'THORN': 222,
+    'Uacute': 218,
+    'Ucirc': 219,
+    'Ugrave': 217,
+    'Uuml': 220,
+    'Yacute': 221,
+    'aacute': 225,
+    'acirc': 226,
+    'aelig': 230,
+    'agrave': 224,
+    'aring': 229,
+    'atilde': 227,
+    'auml': 228,
+    'ccedil': 231,
+    'eacute': 233,
+    'ecirc': 234,
+    'egrave': 232,
+    'eth': 240,
+    'euml': 235,
+    'iacute': 237,
+    'icirc': 238,
+    'igrave': 236,
+    'iuml': 239,
+    'ntilde': 241,
+    'oacute': 243,
+    'ocirc': 244,
+    'ograve': 242,
+    'oslash': 248,
+    'otilde': 245,
+    'ouml': 246,
+    'szlig': 223,
+    'thorn': 254,
+    'uacute': 250,
+    'ucirc': 251,
+    'ugrave': 249,
+    'uuml': 252,
+    'yacute': 253,
+    'yuml': 255,
+    'copy': 169,
+    'reg': 174,
+    'nbsp': 160,
+    'iexcl': 161,
+    'cent': 162,
+    'pound': 163,
+    'curren': 164,
+    'yen': 165,
+    'brvbar': 166,
+    'sect': 167,
+    'uml': 168,
+    'ordf': 170,
+    'laquo': 171,
+    'not': 172,
+    'shy': 173,
+    'macr': 175,
+    'deg': 176,
+    'plusmn': 177,
+    'sup1': 185,
+    'sup2': 178,
+    'sup3': 179,
+    'acute': 180,
+    'micro': 181,
+    'para': 182,
+    'middot': 183,
+    'cedil': 184,
+    'ordm': 186,
+    'raquo': 187,
+    'frac14': 188,
+    'frac12': 189,
+    'frac34': 190,
+    'iquest': 191,
+    'times': 215,
+    'divide': 247,
+    'OElig': 338,
+    'oelig': 339,
+    'Scaron': 352,
+    'scaron': 353,
+    'Yuml': 376,
+    'fnof': 402,
+    'circ': 710,
+    'tilde': 732,
+    'Alpha': 913,
+    'Beta': 914,
+    'Gamma': 915,
+    'Delta': 916,
+    'Epsilon': 917,
+    'Zeta': 918,
+    'Eta': 919,
+    'Theta': 920,
+    'Iota': 921,
+    'Kappa': 922,
+    'Lambda': 923,
+    'Mu': 924,
+    'Nu': 925,
+    'Xi': 926,
+    'Omicron': 927,
+    'Pi': 928,
+    'Rho': 929,
+    'Sigma': 931,
+    'Tau': 932,
+    'Upsilon': 933,
+    'Phi': 934,
+    'Chi': 935,
+    'Psi': 936,
+    'Omega': 937,
+    'alpha': 945,
+    'beta': 946,
+    'gamma': 947,
+    'delta': 948,
+    'epsilon': 949,
+    'zeta': 950,
+    'eta': 951,
+    'theta': 952,
+    'iota': 953,
+    'kappa': 954,
+    'lambda': 955,
+    'mu': 956,
+    'nu': 957,
+    'xi': 958,
+    'omicron': 959,
+    'pi': 960,
+    'rho': 961,
+    'sigmaf': 962,
+    'sigma': 963,
+    'tau': 964,
+    'upsilon': 965,
+    'phi': 966,
+    'chi': 967,
+    'psi': 968,
+    'omega': 969,
+    'thetasym': 977,
+    'upsih': 978,
+    'piv': 982,
+    'ensp': 8194,
+    'emsp': 8195,
+    'thinsp': 8201,
+    'zwnj': 8204,
+    'zwj': 8205,
+    'lrm': 8206,
+    'rlm': 8207,
+    'ndash': 8211,
+    'mdash': 8212,
+    'lsquo': 8216,
+    'rsquo': 8217,
+    'sbquo': 8218,
+    'ldquo': 8220,
+    'rdquo': 8221,
+    'bdquo': 8222,
+    'dagger': 8224,
+    'Dagger': 8225,
+    'bull': 8226,
+    'hellip': 8230,
+    'permil': 8240,
+    'prime': 8242,
+    'Prime': 8243,
+    'lsaquo': 8249,
+    'rsaquo': 8250,
+    'oline': 8254,
+    'frasl': 8260,
+    'euro': 8364,
+    'image': 8465,
+    'weierp': 8472,
+    'real': 8476,
+    'trade': 8482,
+    'alefsym': 8501,
+    'larr': 8592,
+    'uarr': 8593,
+    'rarr': 8594,
+    'darr': 8595,
+    'harr': 8596,
+    'crarr': 8629,
+    'lArr': 8656,
+    'uArr': 8657,
+    'rArr': 8658,
+    'dArr': 8659,
+    'hArr': 8660,
+    'forall': 8704,
+    'part': 8706,
+    'exist': 8707,
+    'empty': 8709,
+    'nabla': 8711,
+    'isin': 8712,
+    'notin': 8713,
+    'ni': 8715,
+    'prod': 8719,
+    'sum': 8721,
+    'minus': 8722,
+    'lowast': 8727,
+    'radic': 8730,
+    'prop': 8733,
+    'infin': 8734,
+    'ang': 8736,
+    'and': 8743,
+    'or': 8744,
+    'cap': 8745,
+    'cup': 8746,
+    'int': 8747,
+    'there4': 8756,
+    'sim': 8764,
+    'cong': 8773,
+    'asymp': 8776,
+    'ne': 8800,
+    'equiv': 8801,
+    'le': 8804,
+    'ge': 8805,
+    'sub': 8834,
+    'sup': 8835,
+    'nsub': 8836,
+    'sube': 8838,
+    'supe': 8839,
+    'oplus': 8853,
+    'otimes': 8855,
+    'perp': 8869,
+    'sdot': 8901,
+    'lceil': 8968,
+    'rceil': 8969,
+    'lfloor': 8970,
+    'rfloor': 8971,
+    'lang': 9001,
+    'rang': 9002,
+    'loz': 9674,
+    'spades': 9824,
+    'clubs': 9827,
+    'hearts': 9829,
+    'diams': 9830
+  }
+
+  Object.keys(sax.ENTITIES).forEach(function (key) {
+    var e = sax.ENTITIES[key]
+    var s = typeof e === 'number' ? String.fromCharCode(e) : e
+    sax.ENTITIES[key] = s
+  })
+
+  for (var s in sax.STATE) {
+    sax.STATE[sax.STATE[s]] = s
+  }
+
+  // shorthand
+  S = sax.STATE
+
+  function emit (parser, event, data) {
+    parser[event] && parser[event](data)
+  }
+
+  function emitNode (parser, nodeType, data) {
+    if (parser.textNode) closeText(parser)
+    emit(parser, nodeType, data)
+  }
+
+  function closeText (parser) {
+    parser.textNode = textopts(parser.opt, parser.textNode)
+    if (parser.textNode) emit(parser, 'ontext', parser.textNode)
+    parser.textNode = ''
+  }
+
+  function textopts (opt, text) {
+    if (opt.trim) text = text.trim()
+    if (opt.normalize) text = text.replace(/\s+/g, ' ')
+    return text
+  }
+
+  function error (parser, er) {
+    closeText(parser)
+    if (parser.trackPosition) {
+      er += '\nLine: ' + parser.line +
+        '\nColumn: ' + parser.column +
+        '\nChar: ' + parser.c
+    }
+    er = new Error(er)
+    parser.error = er
+    emit(parser, 'onerror', er)
+    return parser
+  }
+
+  function end (parser) {
+    if (parser.sawRoot && !parser.closedRoot) strictFail(parser, 'Unclosed root tag')
+    if ((parser.state !== S.BEGIN) &&
+      (parser.state !== S.BEGIN_WHITESPACE) &&
+      (parser.state !== S.TEXT)) {
+      error(parser, 'Unexpected end')
+    }
+    closeText(parser)
+    parser.c = ''
+    parser.closed = true
+    emit(parser, 'onend')
+    SAXParser.call(parser, parser.strict, parser.opt)
+    return parser
+  }
+
+  function strictFail (parser, message) {
+    if (typeof parser !== 'object' || !(parser instanceof SAXParser)) {
+      throw new Error('bad call to strictFail')
+    }
+    if (parser.strict) {
+      error(parser, message)
+    }
+  }
+
+  function newTag (parser) {
+    if (!parser.strict) parser.tagName = parser.tagName[parser.looseCase]()
+    var parent = parser.tags[parser.tags.length - 1] || parser
+    var tag = parser.tag = { name: parser.tagName, attributes: {} }
+
+    // will be overridden if tag contails an xmlns="foo" or xmlns:foo="bar"
+    if (parser.opt.xmlns) {
+      tag.ns = parent.ns
+    }
+    parser.attribList.length = 0
+    emitNode(parser, 'onopentagstart', tag)
+  }
+
+  function qname (name, attribute) {
+    var i = name.indexOf(':')
+    var qualName = i < 0 ? [ '', name ] : name.split(':')
+    var prefix = qualName[0]
+    var local = qualName[1]
+
+    // <x "xmlns"="http://foo">
+    if (attribute && name === 'xmlns') {
+      prefix = 'xmlns'
+      local = ''
+    }
+
+    return { prefix: prefix, local: local }
+  }
+
+  function attrib (parser) {
+    if (!parser.strict) {
+      parser.attribName = parser.attribName[parser.looseCase]()
+    }
+
+    if (parser.attribList.indexOf(parser.attribName) !== -1 ||
+      parser.tag.attributes.hasOwnProperty(parser.attribName)) {
+      parser.attribName = parser.attribValue = ''
+      return
+    }
+
+    if (parser.opt.xmlns) {
+      var qn = qname(parser.attribName, true)
+      var prefix = qn.prefix
+      var local = qn.local
+
+      if (prefix === 'xmlns') {
+        // namespace binding attribute. push the binding into scope
+        if (local === 'xml' && parser.attribValue !== XML_NAMESPACE) {
+          strictFail(parser,
+            'xml: prefix must be bound to ' + XML_NAMESPACE + '\n' +
+            'Actual: ' + parser.attribValue)
+        } else if (local === 'xmlns' && parser.attribValue !== XMLNS_NAMESPACE) {
+          strictFail(parser,
+            'xmlns: prefix must be bound to ' + XMLNS_NAMESPACE + '\n' +
+            'Actual: ' + parser.attribValue)
+        } else {
+          var tag = parser.tag
+          var parent = parser.tags[parser.tags.length - 1] || parser
+          if (tag.ns === parent.ns) {
+            tag.ns = Object.create(parent.ns)
+          }
+          tag.ns[local] = parser.attribValue
+        }
+      }
+
+      // defer onattribute events until all attributes have been seen
+      // so any new bindings can take effect. preserve attribute order
+      // so deferred events can be emitted in document order
+      parser.attribList.push([parser.attribName, parser.attribValue])
+    } else {
+      // in non-xmlns mode, we can emit the event right away
+      parser.tag.attributes[parser.attribName] = parser.attribValue
+      emitNode(parser, 'onattribute', {
+        name: parser.attribName,
+        value: parser.attribValue
+      })
+    }
+
+    parser.attribName = parser.attribValue = ''
+  }
+
+  function openTag (parser, selfClosing) {
+    if (parser.opt.xmlns) {
+      // emit namespace binding events
+      var tag = parser.tag
+
+      // add namespace info to tag
+      var qn = qname(parser.tagName)
+      tag.prefix = qn.prefix
+      tag.local = qn.local
+      tag.uri = tag.ns[qn.prefix] || ''
+
+      if (tag.prefix && !tag.uri) {
+        strictFail(parser, 'Unbound namespace prefix: ' +
+          JSON.stringify(parser.tagName))
+        tag.uri = qn.prefix
+      }
+
+      var parent = parser.tags[parser.tags.length - 1] || parser
+      if (tag.ns && parent.ns !== tag.ns) {
+        Object.keys(tag.ns).forEach(function (p) {
+          emitNode(parser, 'onopennamespace', {
+            prefix: p,
+            uri: tag.ns[p]
+          })
+        })
+      }
+
+      // handle deferred onattribute events
+      // Note: do not apply default ns to attributes:
+      //   http://www.w3.org/TR/REC-xml-names/#defaulting
+      for (var i = 0, l = parser.attribList.length; i < l; i++) {
+        var nv = parser.attribList[i]
+        var name = nv[0]
+        var value = nv[1]
+        var qualName = qname(name, true)
+        var prefix = qualName.prefix
+        var local = qualName.local
+        var uri = prefix === '' ? '' : (tag.ns[prefix] || '')
+        var a = {
+          name: name,
+          value: value,
+          prefix: prefix,
+          local: local,
+          uri: uri
+        }
+
+        // if there's any attributes with an undefined namespace,
+        // then fail on them now.
+        if (prefix && prefix !== 'xmlns' && !uri) {
+          strictFail(parser, 'Unbound namespace prefix: ' +
+            JSON.stringify(prefix))
+          a.uri = prefix
+        }
+        parser.tag.attributes[name] = a
+        emitNode(parser, 'onattribute', a)
+      }
+      parser.attribList.length = 0
+    }
+
+    parser.tag.isSelfClosing = !!selfClosing
+
+    // process the tag
+    parser.sawRoot = true
+    parser.tags.push(parser.tag)
+    emitNode(parser, 'onopentag', parser.tag)
+    if (!selfClosing) {
+      // special case for <script> in non-strict mode.
+      if (!parser.noscript && parser.tagName.toLowerCase() === 'script') {
+        parser.state = S.SCRIPT
+      } else {
+        parser.state = S.TEXT
+      }
+      parser.tag = null
+      parser.tagName = ''
+    }
+    parser.attribName = parser.attribValue = ''
+    parser.attribList.length = 0
+  }
+
+  function closeTag (parser) {
+    if (!parser.tagName) {
+      strictFail(parser, 'Weird empty close tag.')
+      parser.textNode += '</>'
+      parser.state = S.TEXT
+      return
+    }
+
+    if (parser.script) {
+      if (parser.tagName !== 'script') {
+        parser.script += '</' + parser.tagName + '>'
+        parser.tagName = ''
+        parser.state = S.SCRIPT
+        return
+      }
+      emitNode(parser, 'onscript', parser.script)
+      parser.script = ''
+    }
+
+    // first make sure that the closing tag actually exists.
+    // <a><b></c></b></a> will close everything, otherwise.
+    var t = parser.tags.length
+    var tagName = parser.tagName
+    if (!parser.strict) {
+      tagName = tagName[parser.looseCase]()
+    }
+    var closeTo = tagName
+    while (t--) {
+      var close = parser.tags[t]
+      if (close.name !== closeTo) {
+        // fail the first time in strict mode
+        strictFail(parser, 'Unexpected close tag')
+      } else {
+        break
+      }
+    }
+
+    // didn't find it.  we already failed for strict, so just abort.
+    if (t < 0) {
+      strictFail(parser, 'Unmatched closing tag: ' + parser.tagName)
+      parser.textNode += '</' + parser.tagName + '>'
+      parser.state = S.TEXT
+      return
+    }
+    parser.tagName = tagName
+    var s = parser.tags.length
+    while (s-- > t) {
+      var tag = parser.tag = parser.tags.pop()
+      parser.tagName = parser.tag.name
+      emitNode(parser, 'onclosetag', parser.tagName)
+
+      var x = {}
+      for (var i in tag.ns) {
+        x[i] = tag.ns[i]
+      }
+
+      var parent = parser.tags[parser.tags.length - 1] || parser
+      if (parser.opt.xmlns && tag.ns !== parent.ns) {
+        // remove namespace bindings introduced by tag
+        Object.keys(tag.ns).forEach(function (p) {
+          var n = tag.ns[p]
+          emitNode(parser, 'onclosenamespace', { prefix: p, uri: n })
+        })
+      }
+    }
+    if (t === 0) parser.closedRoot = true
+    parser.tagName = parser.attribValue = parser.attribName = ''
+    parser.attribList.length = 0
+    parser.state = S.TEXT
+  }
+
+  function parseEntity (parser) {
+    var entity = parser.entity
+    var entityLC = entity.toLowerCase()
+    var num
+    var numStr = ''
+
+    if (parser.ENTITIES[entity]) {
+      return parser.ENTITIES[entity]
+    }
+    if (parser.ENTITIES[entityLC]) {
+      return parser.ENTITIES[entityLC]
+    }
+    entity = entityLC
+    if (entity.charAt(0) === '#') {
+      if (entity.charAt(1) === 'x') {
+        entity = entity.slice(2)
+        num = parseInt(entity, 16)
+        numStr = num.toString(16)
+      } else {
+        entity = entity.slice(1)
+        num = parseInt(entity, 10)
+        numStr = num.toString(10)
+      }
+    }
+    entity = entity.replace(/^0+/, '')
+    if (isNaN(num) || numStr.toLowerCase() !== entity) {
+      strictFail(parser, 'Invalid character entity')
+      return '&' + parser.entity + ';'
+    }
+
+    return String.fromCodePoint(num)
+  }
+
+  function beginWhiteSpace (parser, c) {
+    if (c === '<') {
+      parser.state = S.OPEN_WAKA
+      parser.startTagPosition = parser.position
+    } else if (!isWhitespace(c)) {
+      // have to process this as a text node.
+      // weird, but happens.
+      strictFail(parser, 'Non-whitespace before first tag.')
+      parser.textNode = c
+      parser.state = S.TEXT
+    }
+  }
+
+  function charAt (chunk, i) {
+    var result = ''
+    if (i < chunk.length) {
+      result = chunk.charAt(i)
+    }
+    return result
+  }
+
+  function write (chunk) {
+    var parser = this
+    if (this.error) {
+      throw this.error
+    }
+    if (parser.closed) {
+      return error(parser,
+        'Cannot write after close. Assign an onready handler.')
+    }
+    if (chunk === null) {
+      return end(parser)
+    }
+    if (typeof chunk === 'object') {
+      chunk = chunk.toString()
+    }
+    var i = 0
+    var c = ''
+    while (true) {
+      c = charAt(chunk, i++)
+      parser.c = c
+
+      if (!c) {
+        break
+      }
+
+      if (parser.trackPosition) {
+        parser.position++
+        if (c === '\n') {
+          parser.line++
+          parser.column = 0
+        } else {
+          parser.column++
+        }
+      }
+
+      switch (parser.state) {
+        case S.BEGIN:
+          parser.state = S.BEGIN_WHITESPACE
+          if (c === '\uFEFF') {
+            continue
+          }
+          beginWhiteSpace(parser, c)
+          continue
+
+        case S.BEGIN_WHITESPACE:
+          beginWhiteSpace(parser, c)
+          continue
+
+        case S.TEXT:
+          if (parser.sawRoot && !parser.closedRoot) {
+            var starti = i - 1
+            while (c && c !== '<' && c !== '&') {
+              c = charAt(chunk, i++)
+              if (c && parser.trackPosition) {
+                parser.position++
+                if (c === '\n') {
+                  parser.line++
+                  parser.column = 0
+                } else {
+                  parser.column++
+                }
+              }
+            }
+            parser.textNode += chunk.substring(starti, i - 1)
+          }
+          if (c === '<' && !(parser.sawRoot && parser.closedRoot && !parser.strict)) {
+            parser.state = S.OPEN_WAKA
+            parser.startTagPosition = parser.position
+          } else {
+            if (!isWhitespace(c) && (!parser.sawRoot || parser.closedRoot)) {
+              strictFail(parser, 'Text data outside of root node.')
+            }
+            if (c === '&') {
+              parser.state = S.TEXT_ENTITY
+            } else {
+              parser.textNode += c
+            }
+          }
+          continue
+
+        case S.SCRIPT:
+          // only non-strict
+          if (c === '<') {
+            parser.state = S.SCRIPT_ENDING
+          } else {
+            parser.script += c
+          }
+          continue
+
+        case S.SCRIPT_ENDING:
+          if (c === '/') {
+            parser.state = S.CLOSE_TAG
+          } else {
+            parser.script += '<' + c
+            parser.state = S.SCRIPT
+          }
+          continue
+
+        case S.OPEN_WAKA:
+          // either a /, ?, !, or text is coming next.
+          if (c === '!') {
+            parser.state = S.SGML_DECL
+            parser.sgmlDecl = ''
+          } else if (isWhitespace(c)) {
+            // wait for it...
+          } else if (isMatch(nameStart, c)) {
+            parser.state = S.OPEN_TAG
+            parser.tagName = c
+          } else if (c === '/') {
+            parser.state = S.CLOSE_TAG
+            parser.tagName = ''
+          } else if (c === '?') {
+            parser.state = S.PROC_INST
+            parser.procInstName = parser.procInstBody = ''
+          } else {
+            strictFail(parser, 'Unencoded <')
+            // if there was some whitespace, then add that in.
+            if (parser.startTagPosition + 1 < parser.position) {
+              var pad = parser.position - parser.startTagPosition
+              c = new Array(pad).join(' ') + c
+            }
+            parser.textNode += '<' + c
+            parser.state = S.TEXT
+          }
+          continue
+
+        case S.SGML_DECL:
+          if ((parser.sgmlDecl + c).toUpperCase() === CDATA) {
+            emitNode(parser, 'onopencdata')
+            parser.state = S.CDATA
+            parser.sgmlDecl = ''
+            parser.cdata = ''
+          } else if (parser.sgmlDecl + c === '--') {
+            parser.state = S.COMMENT
+            parser.comment = ''
+            parser.sgmlDecl = ''
+          } else if ((parser.sgmlDecl + c).toUpperCase() === DOCTYPE) {
+            parser.state = S.DOCTYPE
+            if (parser.doctype || parser.sawRoot) {
+              strictFail(parser,
+                'Inappropriately located doctype declaration')
+            }
+            parser.doctype = ''
+            parser.sgmlDecl = ''
+          } else if (c === '>') {
+            emitNode(parser, 'onsgmldeclaration', parser.sgmlDecl)
+            parser.sgmlDecl = ''
+            parser.state = S.TEXT
+          } else if (isQuote(c)) {
+            parser.state = S.SGML_DECL_QUOTED
+            parser.sgmlDecl += c
+          } else {
+            parser.sgmlDecl += c
+          }
+          continue
+
+        case S.SGML_DECL_QUOTED:
+          if (c === parser.q) {
+            parser.state = S.SGML_DECL
+            parser.q = ''
+          }
+          parser.sgmlDecl += c
+          continue
+
+        case S.DOCTYPE:
+          if (c === '>') {
+            parser.state = S.TEXT
+            emitNode(parser, 'ondoctype', parser.doctype)
+            parser.doctype = true // just remember that we saw it.
+          } else {
+            parser.doctype += c
+            if (c === '[') {
+              parser.state = S.DOCTYPE_DTD
+            } else if (isQuote(c)) {
+              parser.state = S.DOCTYPE_QUOTED
+              parser.q = c
+            }
+          }
+          continue
+
+        case S.DOCTYPE_QUOTED:
+          parser.doctype += c
+          if (c === parser.q) {
+            parser.q = ''
+            parser.state = S.DOCTYPE
+          }
+          continue
+
+        case S.DOCTYPE_DTD:
+          parser.doctype += c
+          if (c === ']') {
+            parser.state = S.DOCTYPE
+          } else if (isQuote(c)) {
+            parser.state = S.DOCTYPE_DTD_QUOTED
+            parser.q = c
+          }
+          continue
+
+        case S.DOCTYPE_DTD_QUOTED:
+          parser.doctype += c
+          if (c === parser.q) {
+            parser.state = S.DOCTYPE_DTD
+            parser.q = ''
+          }
+          continue
+
+        case S.COMMENT:
+          if (c === '-') {
+            parser.state = S.COMMENT_ENDING
+          } else {
+            parser.comment += c
+          }
+          continue
+
+        case S.COMMENT_ENDING:
+          if (c === '-') {
+            parser.state = S.COMMENT_ENDED
+            parser.comment = textopts(parser.opt, parser.comment)
+            if (parser.comment) {
+              emitNode(parser, 'oncomment', parser.comment)
+            }
+            parser.comment = ''
+          } else {
+            parser.comment += '-' + c
+            parser.state = S.COMMENT
+          }
+          continue
+
+        case S.COMMENT_ENDED:
+          if (c !== '>') {
+            strictFail(parser, 'Malformed comment')
+            // allow <!-- blah -- bloo --> in non-strict mode,
+            // which is a comment of " blah -- bloo "
+            parser.comment += '--' + c
+            parser.state = S.COMMENT
+          } else {
+            parser.state = S.TEXT
+          }
+          continue
+
+        case S.CDATA:
+          if (c === ']') {
+            parser.state = S.CDATA_ENDING
+          } else {
+            parser.cdata += c
+          }
+          continue
+
+        case S.CDATA_ENDING:
+          if (c === ']') {
+            parser.state = S.CDATA_ENDING_2
+          } else {
+            parser.cdata += ']' + c
+            parser.state = S.CDATA
+          }
+          continue
+
+        case S.CDATA_ENDING_2:
+          if (c === '>') {
+            if (parser.cdata) {
+              emitNode(parser, 'oncdata', parser.cdata)
+            }
+            emitNode(parser, 'onclosecdata')
+            parser.cdata = ''
+            parser.state = S.TEXT
+          } else if (c === ']') {
+            parser.cdata += ']'
+          } else {
+            parser.cdata += ']]' + c
+            parser.state = S.CDATA
+          }
+          continue
+
+        case S.PROC_INST:
+          if (c === '?') {
+            parser.state = S.PROC_INST_ENDING
+          } else if (isWhitespace(c)) {
+            parser.state = S.PROC_INST_BODY
+          } else {
+            parser.procInstName += c
+          }
+          continue
+
+        case S.PROC_INST_BODY:
+          if (!parser.procInstBody && isWhitespace(c)) {
+            continue
+          } else if (c === '?') {
+            parser.state = S.PROC_INST_ENDING
+          } else {
+            parser.procInstBody += c
+          }
+          continue
+
+        case S.PROC_INST_ENDING:
+          if (c === '>') {
+            emitNode(parser, 'onprocessinginstruction', {
+              name: parser.procInstName,
+              body: parser.procInstBody
+            })
+            parser.procInstName = parser.procInstBody = ''
+            parser.state = S.TEXT
+          } else {
+            parser.procInstBody += '?' + c
+            parser.state = S.PROC_INST_BODY
+          }
+          continue
+
+        case S.OPEN_TAG:
+          if (isMatch(nameBody, c)) {
+            parser.tagName += c
+          } else {
+            newTag(parser)
+            if (c === '>') {
+              openTag(parser)
+            } else if (c === '/') {
+              parser.state = S.OPEN_TAG_SLASH
+            } else {
+              if (!isWhitespace(c)) {
+                strictFail(parser, 'Invalid character in tag name')
+              }
+              parser.state = S.ATTRIB
+            }
+          }
+          continue
+
+        case S.OPEN_TAG_SLASH:
+          if (c === '>') {
+            openTag(parser, true)
+            closeTag(parser)
+          } else {
+            strictFail(parser, 'Forward-slash in opening tag not followed by >')
+            parser.state = S.ATTRIB
+          }
+          continue
+
+        case S.ATTRIB:
+          // haven't read the attribute name yet.
+          if (isWhitespace(c)) {
+            continue
+          } else if (c === '>') {
+            openTag(parser)
+          } else if (c === '/') {
+            parser.state = S.OPEN_TAG_SLASH
+          } else if (isMatch(nameStart, c)) {
+            parser.attribName = c
+            parser.attribValue = ''
+            parser.state = S.ATTRIB_NAME
+          } else {
+            strictFail(parser, 'Invalid attribute name')
+          }
+          continue
+
+        case S.ATTRIB_NAME:
+          if (c === '=') {
+            parser.state = S.ATTRIB_VALUE
+          } else if (c === '>') {
+            strictFail(parser, 'Attribute without value')
+            parser.attribValue = parser.attribName
+            attrib(parser)
+            openTag(parser)
+          } else if (isWhitespace(c)) {
+            parser.state = S.ATTRIB_NAME_SAW_WHITE
+          } else if (isMatch(nameBody, c)) {
+            parser.attribName += c
+          } else {
+            strictFail(parser, 'Invalid attribute name')
+          }
+          continue
+
+        case S.ATTRIB_NAME_SAW_WHITE:
+          if (c === '=') {
+            parser.state = S.ATTRIB_VALUE
+          } else if (isWhitespace(c)) {
+            continue
+          } else {
+            strictFail(parser, 'Attribute without value')
+            parser.tag.attributes[parser.attribName] = ''
+            parser.attribValue = ''
+            emitNode(parser, 'onattribute', {
+              name: parser.attribName,
+              value: ''
+            })
+            parser.attribName = ''
+            if (c === '>') {
+              openTag(parser)
+            } else if (isMatch(nameStart, c)) {
+              parser.attribName = c
+              parser.state = S.ATTRIB_NAME
+            } else {
+              strictFail(parser, 'Invalid attribute name')
+              parser.state = S.ATTRIB
+            }
+          }
+          continue
+
+        case S.ATTRIB_VALUE:
+          if (isWhitespace(c)) {
+            continue
+          } else if (isQuote(c)) {
+            parser.q = c
+            parser.state = S.ATTRIB_VALUE_QUOTED
+          } else {
+            strictFail(parser, 'Unquoted attribute value')
+            parser.state = S.ATTRIB_VALUE_UNQUOTED
+            parser.attribValue = c
+          }
+          continue
+
+        case S.ATTRIB_VALUE_QUOTED:
+          if (c !== parser.q) {
+            if (c === '&') {
+              parser.state = S.ATTRIB_VALUE_ENTITY_Q
+            } else {
+              parser.attribValue += c
+            }
+            continue
+          }
+          attrib(parser)
+          parser.q = ''
+          parser.state = S.ATTRIB_VALUE_CLOSED
+          continue
+
+        case S.ATTRIB_VALUE_CLOSED:
+          if (isWhitespace(c)) {
+            parser.state = S.ATTRIB
+          } else if (c === '>') {
+            openTag(parser)
+          } else if (c === '/') {
+            parser.state = S.OPEN_TAG_SLASH
+          } else if (isMatch(nameStart, c)) {
+            strictFail(parser, 'No whitespace between attributes')
+            parser.attribName = c
+            parser.attribValue = ''
+            parser.state = S.ATTRIB_NAME
+          } else {
+            strictFail(parser, 'Invalid attribute name')
+          }
+          continue
+
+        case S.ATTRIB_VALUE_UNQUOTED:
+          if (!isAttribEnd(c)) {
+            if (c === '&') {
+              parser.state = S.ATTRIB_VALUE_ENTITY_U
+            } else {
+              parser.attribValue += c
+            }
+            continue
+          }
+          attrib(parser)
+          if (c === '>') {
+            openTag(parser)
+          } else {
+            parser.state = S.ATTRIB
+          }
+          continue
+
+        case S.CLOSE_TAG:
+          if (!parser.tagName) {
+            if (isWhitespace(c)) {
+              continue
+            } else if (notMatch(nameStart, c)) {
+              if (parser.script) {
+                parser.script += '</' + c
+                parser.state = S.SCRIPT
+              } else {
+                strictFail(parser, 'Invalid tagname in closing tag.')
+              }
+            } else {
+              parser.tagName = c
+            }
+          } else if (c === '>') {
+            closeTag(parser)
+          } else if (isMatch(nameBody, c)) {
+            parser.tagName += c
+          } else if (parser.script) {
+            parser.script += '</' + parser.tagName
+            parser.tagName = ''
+            parser.state = S.SCRIPT
+          } else {
+            if (!isWhitespace(c)) {
+              strictFail(parser, 'Invalid tagname in closing tag')
+            }
+            parser.state = S.CLOSE_TAG_SAW_WHITE
+          }
+          continue
+
+        case S.CLOSE_TAG_SAW_WHITE:
+          if (isWhitespace(c)) {
+            continue
+          }
+          if (c === '>') {
+            closeTag(parser)
+          } else {
+            strictFail(parser, 'Invalid characters in closing tag')
+          }
+          continue
+
+        case S.TEXT_ENTITY:
+        case S.ATTRIB_VALUE_ENTITY_Q:
+        case S.ATTRIB_VALUE_ENTITY_U:
+          var returnState
+          var buffer
+          switch (parser.state) {
+            case S.TEXT_ENTITY:
+              returnState = S.TEXT
+              buffer = 'textNode'
+              break
+
+            case S.ATTRIB_VALUE_ENTITY_Q:
+              returnState = S.ATTRIB_VALUE_QUOTED
+              buffer = 'attribValue'
+              break
+
+            case S.ATTRIB_VALUE_ENTITY_U:
+              returnState = S.ATTRIB_VALUE_UNQUOTED
+              buffer = 'attribValue'
+              break
+          }
+
+          if (c === ';') {
+            parser[buffer] += parseEntity(parser)
+            parser.entity = ''
+            parser.state = returnState
+          } else if (isMatch(parser.entity.length ? entityBody : entityStart, c)) {
+            parser.entity += c
+          } else {
+            strictFail(parser, 'Invalid character in entity name')
+            parser[buffer] += '&' + parser.entity + c
+            parser.entity = ''
+            parser.state = returnState
+          }
+
+          continue
+
+        default:
+          throw new Error(parser, 'Unknown state: ' + parser.state)
+      }
+    } // while
+
+    if (parser.position >= parser.bufferCheckPosition) {
+      checkBufferLength(parser)
+    }
+    return parser
+  }
+
+  /*! http://mths.be/fromcodepoint v0.1.0 by @mathias */
+  /* istanbul ignore next */
+  if (!String.fromCodePoint) {
+    (function () {
+      var stringFromCharCode = String.fromCharCode
+      var floor = Math.floor
+      var fromCodePoint = function () {
+        var MAX_SIZE = 0x4000
+        var codeUnits = []
+        var highSurrogate
+        var lowSurrogate
+        var index = -1
+        var length = arguments.length
+        if (!length) {
+          return ''
+        }
+        var result = ''
+        while (++index < length) {
+          var codePoint = Number(arguments[index])
+          if (
+            !isFinite(codePoint) || // `NaN`, `+Infinity`, or `-Infinity`
+            codePoint < 0 || // not a valid Unicode code point
+            codePoint > 0x10FFFF || // not a valid Unicode code point
+            floor(codePoint) !== codePoint // not an integer
+          ) {
+            throw RangeError('Invalid code point: ' + codePoint)
+          }
+          if (codePoint <= 0xFFFF) { // BMP code point
+            codeUnits.push(codePoint)
+          } else { // Astral code point; split in surrogate halves
+            // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+            codePoint -= 0x10000
+            highSurrogate = (codePoint >> 10) + 0xD800
+            lowSurrogate = (codePoint % 0x400) + 0xDC00
+            codeUnits.push(highSurrogate, lowSurrogate)
+          }
+          if (index + 1 === length || codeUnits.length > MAX_SIZE) {
+            result += stringFromCharCode.apply(null, codeUnits)
+            codeUnits.length = 0
+          }
+        }
+        return result
+      }
+      /* istanbul ignore next */
+      if (Object.defineProperty) {
+        Object.defineProperty(String, 'fromCodePoint', {
+          value: fromCodePoint,
+          configurable: true,
+          writable: true
+        })
+      } else {
+        String.fromCodePoint = fromCodePoint
+      }
+    }())
+  }
+})(typeof exports === 'undefined' ? this.sax = {} : exports)
+
+}).call(this,require("buffer").Buffer)
+},{"buffer":18,"stream":47,"string_decoder":52}],11:[function(require,module,exports){
+/**
+ * http://en.wikipedia.org/wiki/YouTube#Quality_and_formats
+ */
+module.exports = {
+
+  '5': {
+    container: 'flv',
+    resolution: '240p',
+    encoding: 'Sorenson H.283',
+    profile: null,
+    bitrate: '0.25',
+    audioEncoding: 'mp3',
+    audioBitrate: 64,
+  },
+
+  '6': {
+    container: 'flv',
+    resolution: '270p',
+    encoding: 'Sorenson H.263',
+    profile: null,
+    bitrate: '0.8',
+    audioEncoding: 'mp3',
+    audioBitrate: 64,
+  },
+
+  '13': {
+    container: '3gp',
+    resolution: null,
+    encoding: 'MPEG-4 Visual',
+    profile: null,
+    bitrate: '0.5',
+    audioEncoding: 'aac',
+    audioBitrate: null,
+  },
+
+  '17': {
+    container: '3gp',
+    resolution: '144p',
+    encoding: 'MPEG-4 Visual',
+    profile: 'simple',
+    bitrate: '0.05',
+    audioEncoding: 'aac',
+    audioBitrate: 24,
+  },
+
+  '18': {
+    container: 'mp4',
+    resolution: '360p',
+    encoding: 'H.264',
+    profile: 'baseline',
+    bitrate: '0.5',
+    audioEncoding: 'aac',
+    audioBitrate: 96,
+  },
+
+  '22': {
+    container: 'mp4',
+    resolution: '720p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '2-3',
+    audioEncoding: 'aac',
+    audioBitrate: 192,
+  },
+
+  '34': {
+    container: 'flv',
+    resolution: '360p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.5',
+    audioEncoding: 'aac',
+    audioBitrate: 128,
+  },
+
+  '35': {
+    container: 'flv',
+    resolution: '480p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.8-1',
+    audioEncoding: 'aac',
+    audioBitrate: 128,
+  },
+
+  '36': {
+    container: '3gp',
+    resolution: '240p',
+    encoding: 'MPEG-4 Visual',
+    profile: 'simple',
+    bitrate: '0.175',
+    audioEncoding: 'aac',
+    audioBitrate: 32,
+  },
+
+  '37': {
+    container: 'mp4',
+    resolution: '1080p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '3-5.9',
+    audioEncoding: 'aac',
+    audioBitrate: 192,
+  },
+
+  '38': {
+    container: 'mp4',
+    resolution: '3072p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '3.5-5',
+    audioEncoding: 'aac',
+    audioBitrate: 192,
+  },
+
+  '43': {
+    container: 'webm',
+    resolution: '360p',
+    encoding: 'VP8',
+    profile: null,
+    bitrate: '0.5-0.75',
+    audioEncoding: 'vorbis',
+    audioBitrate: 128,
+  },
+
+  '44': {
+    container: 'webm',
+    resolution: '480p',
+    encoding: 'VP8',
+    profile: null,
+    bitrate: '1',
+    audioEncoding: 'vorbis',
+    audioBitrate: 128,
+  },
+
+  '45': {
+    container: 'webm',
+    resolution: '720p',
+    encoding: 'VP8',
+    profile: null,
+    bitrate: '2',
+    audioEncoding: 'vorbis',
+    audioBitrate: 192,
+  },
+
+  '46': {
+    container: 'webm',
+    resolution: '1080p',
+    encoding: 'vp8',
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'vorbis',
+    audioBitrate: 192,
+  },
+
+  '82': {
+    container: 'mp4',
+    resolution: '360p',
+    encoding: 'H.264',
+    profile: '3d',
+    bitrate: '0.5',
+    audioEncoding: 'aac',
+    audioBitrate: 96,
+  },
+
+  '83': {
+    container: 'mp4',
+    resolution: '240p',
+    encoding: 'H.264',
+    profile: '3d',
+    bitrate: '0.5',
+    audioEncoding: 'aac',
+    audioBitrate: 96,
+  },
+
+  '84': {
+    container: 'mp4',
+    resolution: '720p',
+    encoding: 'H.264',
+    profile: '3d',
+    bitrate: '2-3',
+    audioEncoding: 'aac',
+    audioBitrate: 192,
+  },
+
+  '85': {
+    container: 'mp4',
+    resolution: '1080p',
+    encoding: 'H.264',
+    profile: '3d',
+    bitrate: '3-4',
+    audioEncoding: 'aac',
+    audioBitrate: 192,
+  },
+
+  '100': {
+    container: 'webm',
+    resolution: '360p',
+    encoding: 'VP8',
+    profile: '3d',
+    bitrate: null,
+    audioEncoding: 'vorbis',
+    audioBitrate: 128,
+  },
+
+  '101': {
+    container: 'webm',
+    resolution: '360p',
+    encoding: 'VP8',
+    profile: '3d',
+    bitrate: null,
+    audioEncoding: 'vorbis',
+    audioBitrate: 192,
+  },
+
+  '102': {
+    container: 'webm',
+    resolution: '720p',
+    encoding: 'VP8',
+    profile: '3d',
+    bitrate: null,
+    audioEncoding: 'vorbis',
+    audioBitrate: 192,
+  },
+
+  // DASH (video only)
+  '133': {
+    container: 'mp4',
+    resolution: '240p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.2-0.3',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '134': {
+    container: 'mp4',
+    resolution: '360p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.3-0.4',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '135': {
+    container: 'mp4',
+    resolution: '480p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.5-1',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '136': {
+    container: 'mp4',
+    resolution: '720p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '1-1.5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '137': {
+    container: 'mp4',
+    resolution: '1080p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '2.5-3',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '138': {
+    container: 'mp4',
+    resolution: '4320p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '13.5-25',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '160': {
+    container: 'mp4',
+    resolution: '144p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.1',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '242': {
+    container: 'webm',
+    resolution: '240p',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '0.1-0.2',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '243': {
+    container: 'webm',
+    resolution: '360p',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '0.25',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '244': {
+    container: 'webm',
+    resolution: '480p',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '0.5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '247': {
+    container: 'webm',
+    resolution: '720p',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '0.7-0.8',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '248': {
+    container: 'webm',
+    resolution: '1080p',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '1.5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '264': {
+    container: 'mp4',
+    resolution: '1440p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '4-4.5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '266': {
+    container: 'mp4',
+    resolution: '2160p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '12.5-16',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '271': {
+    container: 'webm',
+    resolution: '1440p',
+    encoding: 'VP9',
+    profile: 'profle 0',
+    bitrate: '9',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '272': {
+    container: 'webm',
+    resolution: '4320p',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '20-25',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '278': {
+    container: 'webm',
+    resolution: '144p 15fps',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '0.08',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '298': {
+    container: 'mp4',
+    resolution: '720p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '3-3.5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '299': {
+    container: 'mp4',
+    resolution: '1080p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '5.5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '302': {
+    container: 'webm',
+    resolution: '720p HFR',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '2.5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '303': {
+    container: 'webm',
+    resolution: '1080p HFR',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '308': {
+    container: 'webm',
+    resolution: '1440p HFR',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '10',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '313': {
+    container: 'webm',
+    resolution: '2160p',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '13-15',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '315': {
+    container: 'webm',
+    resolution: '2160p HFR',
+    encoding: 'VP9',
+    profile: 'profile 0',
+    bitrate: '20-25',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '330': {
+    container: 'webm',
+    resolution: '144p HDR, HFR',
+    encoding: 'VP9',
+    profile: 'profile 2',
+    bitrate: '0.08',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '331': {
+    container: 'webm',
+    resolution: '240p HDR, HFR',
+    encoding: 'VP9',
+    profile: 'profile 2',
+    bitrate: '0.1-0.15',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '332': {
+    container: 'webm',
+    resolution: '360p HDR, HFR',
+    encoding: 'VP9',
+    profile: 'profile 2',
+    bitrate: '0.25',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '333': {
+    container: 'webm',
+    resolution: '240p HDR, HFR',
+    encoding: 'VP9',
+    profile: 'profile 2',
+    bitrate: '0.5',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '334': {
+    container: 'webm',
+    resolution: '720p HDR, HFR',
+    encoding: 'VP9',
+    profile: 'profile 2',
+    bitrate: '1',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '335': {
+    container: 'webm',
+    resolution: '1080p HDR, HFR',
+    encoding: 'VP9',
+    profile: 'profile 2',
+    bitrate: '1.5-2',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '336': {
+    container: 'webm',
+    resolution: '1440p HDR, HFR',
+    encoding: 'VP9',
+    profile: 'profile 2',
+    bitrate: '5-7',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  '337': {
+    container: 'webm',
+    resolution: '2160p HDR, HFR',
+    encoding: 'VP9',
+    profile: 'profile 2',
+    bitrate: '12-14',
+    audioEncoding: null,
+    audioBitrate: null,
+  },
+
+  // DASH (audio only)
+  '139': {
+    container: 'mp4',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'aac',
+    audioBitrate: 48,
+  },
+
+  '140': {
+    container: 'm4a',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'aac',
+    audioBitrate: 128,
+  },
+
+  '141': {
+    container: 'mp4',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'aac',
+    audioBitrate: 256,
+  },
+
+  '171': {
+    container: 'webm',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'vorbis',
+    audioBitrate: 128,
+  },
+
+  '172': {
+    container: 'webm',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'vorbis',
+    audioBitrate: 192,
+  },
+
+  '249': {
+    container: 'webm',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'opus',
+    audioBitrate: 48,
+  },
+  '250': {
+    container: 'webm',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'opus',
+    audioBitrate: 64,
+  },
+  '251': {
+    container: 'webm',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'opus',
+    audioBitrate: 160,
+  },
+
+  // Live streaming
+  '91': {
+    container: 'ts',
+    resolution: '144p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.1',
+    audioEncoding: 'aac',
+    audioBitrate: 48,
+  },
+
+  '92': {
+    container: 'ts',
+    resolution: '240p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.15-0.3',
+    audioEncoding: 'aac',
+    audioBitrate: 48,
+  },
+
+  '93': {
+    container: 'ts',
+    resolution: '360p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.5-1',
+    audioEncoding: 'aac',
+    audioBitrate: 128,
+  },
+
+  '94': {
+    container: 'ts',
+    resolution: '480p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '0.8-1.25',
+    audioEncoding: 'aac',
+    audioBitrate: 128,
+  },
+
+  '95': {
+    container: 'ts',
+    resolution: '720p',
+    encoding: 'H.264',
+    profile: 'main',
+    bitrate: '1.5-3',
+    audioEncoding: 'aac',
+    audioBitrate: 256,
+  },
+
+  '96': {
+    container: 'ts',
+    resolution: '1080p',
+    encoding: 'H.264',
+    profile: 'high',
+    bitrate: '2.5-6',
+    audioEncoding: 'aac',
+    audioBitrate: 256,
+  },
+
+  '120': {
+    container: 'flv',
+    resolution: '720p',
+    encoding: 'H.264',
+    profile: 'Main@L3.1',
+    bitrate: '2',
+    audioEncoding: 'aac',
+    audioBitrate: 128,
+  },
+
+  '127': {
+    container: 'ts',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'aac',
+    audioBitrate: 96,
+  },
+
+  '128': {
+    container: 'ts',
+    resolution: null,
+    encoding: null,
+    profile: null,
+    bitrate: null,
+    audioEncoding: 'aac',
+    audioBitrate: 96,
+  },
+
+  '132': {
+    container: 'ts',
+    resolution: '240p',
+    encoding: 'H.264',
+    profile: 'baseline',
+    bitrate: '0.15-0.2',
+    audioEncoding: 'aac',
+    audioBitrate: 48,
+  },
+
+  '151': {
+    container: 'ts',
+    resolution: '720p',
+    encoding: 'H.264',
+    profile: 'baseline',
+    bitrate: '0.05',
+    audioEncoding: 'aac',
+    audioBitrate: 24,
+  },
+
+};
+
+},{}],12:[function(require,module,exports){
+'use strict';
+
+const PassThrough = require('stream').PassThrough;
+const deprecate   = require('util').deprecate;
+const getInfo     = require('./info');
+const util        = require('./util');
+const sig         = require('./sig');
+const request     = require('miniget');
+const m3u8stream  = require('m3u8stream');
+
+
+/**
+ * @param {String} link
+ * @param {!Object} options
+ * @return {ReadableStream}
+ */
+var ytdl = module.exports = function ytdl(link, options) {
+  var stream = createStream(options);
+  getInfo(link, options, (err, info) => {
+    if (err) {
+      stream.emit('error', err);
+      return;
+    }
+
+    downloadFromInfoCallback(stream, info, options);
+  });
+
+  return stream;
+};
+
+
+ytdl.getInfo = getInfo;
+ytdl.chooseFormat = util.chooseFormat;
+ytdl.filterFormats = util.filterFormats;
+ytdl.validateID = util.validateID;
+ytdl.validateURL = util.validateURL;
+ytdl.validateLink = deprecate(util.validateURL,
+  'ytdl.validateLink: Renamed to ytdl.validateURL');
+ytdl.getURLVideoID = util.getURLVideoID;
+ytdl.getVideoID = util.getVideoID;
+ytdl.cache = sig.cache;
+
+
+function createStream(options) {
+  var stream = new PassThrough({
+    highWaterMark: options && options.highWaterMark || null,
+  });
+  stream.destroy = () => { stream._isDestroyed = true; };
+  return stream;
+}
+
+
+/**
+ * Chooses a format to download.
+ *
+ * @param {stream.Readable} stream
+ * @param {Object} info
+ * @param {Object} options
+ */
+function downloadFromInfoCallback(stream, info, options) {
+  options = options || {};
+  var format = util.chooseFormat(info.formats, options);
+  if (format instanceof Error) {
+    // The caller expects this function to be async.
+    setImmediate(() => {
+      stream.emit('error', format);
+    });
+    return;
+  }
+  stream.emit('info', info, format);
+  if (stream._isDestroyed) { return; }
+
+  var url = format.url;
+  if (format.live) {
+    let req = m3u8stream(url, {
+      chunkReadahead: +info.live_chunk_readahead,
+      requestOptions: options.requestOptions,
+    });
+    req.on('error', stream.emit.bind(stream, 'error'));
+    stream.destroy = req.end.bind(req);
+    req.pipe(stream);
+
+  } else {
+    if (options.begin) {
+      url += '&begin=' + util.fromHumanTime(options.begin);
+    }
+    doDownload(stream, url, options, {
+      trys: options.retries || 5,
+      range: {
+        start: options.range && options.range.start ? options.range.start : 0,
+        end: options.range && options.range.end ? options.range.end : -1,
+      },
+      downloaded: 0,
+    });
+  }
+}
+
+
+/**
+ * Tries to download the video. If the download stops halfway, attempts to
+ * reconnect, continuing the download where it left off.
+ *
+ * @param {stream.Readable} stream
+ * @param {String} url
+ * @param {Object} options
+ * @param {Object} reconnectInfo
+ */
+function doDownload(stream, url, options, reconnectInfo) {
+  if (reconnectInfo.trys === 0) {
+    stream.emit('error', new Error('Too many reconnects'));
+    return;
+  }
+
+  // Start downloading the video.
+  var rangedUrl = url;
+  if (reconnectInfo.downloaded !== 0 ||
+      reconnectInfo.range.start !== 0 ||
+      reconnectInfo.range.end !== -1) {
+    let start = reconnectInfo.range.start + reconnectInfo.downloaded;
+    let end = reconnectInfo.range.end != -1 ? reconnectInfo.range.end : '';
+    rangedUrl += '&range=' + start + '-' + end;
+  }
+
+  var req = request(rangedUrl, options.requestOptions);
+
+  function cleanup() {
+    req.removeListener('end', onend);
+    req.removeListener('data', ondata);
+    req.unpipe();
+  }
+
+  var myres = false;
+  stream.destroy = () => {
+    stream._isDestroyed = true;
+    req.abort();
+    cleanup();
+  };
+
+  // Forward events from the request to the stream.
+  ['abort', 'request', 'response'].forEach(function(event) {
+    req.on(event, (arg) => {
+      stream.emit.call(stream, event, arg);
+    });
+  });
+
+  function onend() {
+    cleanup();
+
+    // Reconnect if there is more to be downloaded.
+    if (reconnectInfo.downloaded < reconnectInfo.total) {
+      reconnectInfo.trys = reconnectInfo.trys - 1;
+      doDownload(stream, url, options, reconnectInfo);
+    } else {
+      stream.end();
+    }
+  }
+
+  req.on('error', (err) => {
+    if (stream._isDestroyed || !myres) {
+      stream.emit('error', err);
+    } else {
+      onend();
+    }
+  });
+
+  req.on('response', (res) => {
+    myres = true;
+    if (stream._isDestroyed) { return; }
+    if (reconnectInfo.downloaded === 0) {
+      reconnectInfo.total = parseInt(res.headers['content-length']);
+    }
+  });
+
+  function ondata(chunk) {
+    var downloaded = reconnectInfo.downloaded += chunk.length;
+    stream.emit('progress', chunk.length, downloaded, reconnectInfo.total);
+  }
+
+  req.on('data', ondata);
+  req.on('end', onend);
+  req.pipe(stream, { end: false });
+}
+
+
+/**
+ * Can be used to download video after its `info` is gotten through
+ * `ytdl.getInfo()`. In case the user might want to look at the
+ * `info` object before deciding to download.
+ *
+ * @param {Object} info
+ * @param {!Object} options
+ */
+ytdl.downloadFromInfo = (info, options) => {
+  var stream = createStream(options);
+  setImmediate(() => {
+    downloadFromInfoCallback(stream, info, options);
+  });
+  return stream;
+};
+
+},{"./info":13,"./sig":14,"./util":15,"m3u8stream":6,"miniget":9,"stream":47,"util":59}],13:[function(require,module,exports){
+'use strict';
+
+const urllib      = require('url');
+const querystring = require('querystring');
+const sax         = require('sax');
+const request     = require('miniget');
+const util        = require('./util');
+const sig         = require('./sig');
+const FORMATS     = require('./formats');
+
+
+const VIDEO_URL = 'https://www.youtube.com/watch?v=';
+const EMBED_URL = 'https://www.youtube.com/embed/';
+const VIDEO_EURL = 'https://youtube.googleapis.com/v/';
+const INFO_HOST = 'www.youtube.com';
+const INFO_PATH = '/get_video_info';
+const KEYS_TO_SPLIT = [
+  'keywords',
+  'fmt_list',
+  'fexp',
+  'watermark'
+];
+
+
+/**
+ * Gets info from a video.
+ *
+ * @param {String} link
+ * @param {Object} options
+ * @param {Function(Error, Object)} callback
+ */
+module.exports = function getInfo(link, options, callback) {
+  if (typeof options === 'function') {
+    callback = options;
+    options = {};
+  } else if (!options) {
+    options = {};
+  }
+  if (!callback) {
+    return new Promise((resolve, reject) => {
+      getInfo(link, options, (err, info) => {
+        if (err) return reject(err);
+        resolve(info);
+      });
+    });
+  }
+
+  var id = util.getVideoID(link);
+  if (id instanceof Error) return callback(id);
+
+  // Try getting config from the video page first.
+  var params = 'hl=' + (options.lang || 'en');
+  var url = VIDEO_URL + id + '&' + params;
+  
+  request(url, options.requestOptions, (err, res, body) => {
+    if (err) return callback(err);
+
+    // Check if there are any errors with this video page.
+    var unavailableMsg = util.between(body, '<div id="player-unavailable"', '>');
+    if (unavailableMsg &&
+        !/\bhid\b/.test(util.between(unavailableMsg, 'class="', '"'))) {
+      // Ignore error about age restriction.
+      if (!body.includes('<div id="watch7-player-age-gate-content"')) {
+        return callback(new Error(util.between(body,
+          '<h1 id="unavailable-message" class="message">', '</h1>').trim()));
+      }
+    }
+
+    // Parse out additional metadata from this page.
+    var additional = {
+      // Get the author/uploader.
+      author: util.getAuthor(body),
+
+      // Get the day the vid was published.
+      published: util.getPublished(body),
+
+      // Get description.
+      description: util.getVideoDescription(body),
+
+      // Get related videos.
+      related_videos: util.getRelatedVideos(body),
+
+      // Give the canonical link to the video.
+      video_url: url,
+    };
+
+    var jsonStr = util.between(body, 'ytplayer.config = ', '</script>');
+    var config;
+    if (jsonStr) {
+      config = jsonStr.slice(0, jsonStr.lastIndexOf(';ytplayer.load'));
+      gotConfig(id, options, additional, config, false, callback);
+
+    } else {
+      // If the video page doesn't work, maybe because it has mature content.
+      // and requires an account logged in to view, try the embed page.
+      url = EMBED_URL + id + '?' + params;
+      request(url, options.requestOptions, (err, res, body) => {
+        if (err) return callback(err);
+        config = util.between(body, 't.setConfig({\'PLAYER_CONFIG\': ', '},\'');
+        gotConfig(id, options, additional, config, true, callback);
+      });
+    }
+  });
+};
+
+
+/**
+ * @param {Object} id
+ * @param {Object} options
+ * @param {Object} additional
+ * @param {Object} config
+ * @param {Boolean} appendConfig
+ * @param {Function(Error, Object)} callback
+ */
+function gotConfig(id, options, additional, config, appendConfig, callback) {
+  if (!config) {
+    return callback(new Error('Could not find player config'));
+  }
+  try {
+    config = JSON.parse(config + (appendConfig ? '}' : ''));
+  } catch (err) {
+    return callback(new Error('Error parsing config: ' + err.message));
+  }
+  var url = urllib.format({
+    protocol: 'https',
+    host: INFO_HOST,
+    pathname: INFO_PATH,
+    query: {
+      video_id: id,
+      eurl: VIDEO_EURL + id,
+      ps: 'default',
+      gl: 'US',
+      hl: (options.lang || 'en'),
+      sts: config.sts,
+      el: 'info',
+    },
+  });
+  request(url, options.requestOptions, (err, res, body) => {
+    if (err) return callback(err);
+    var info = querystring.parse(body);
+    if (info.requires_purchase === '1') {
+      return callback(new Error('Video requires purchase'));
+    } 
+
+    // Split some keys by commas.
+    KEYS_TO_SPLIT.forEach((key) => {
+      if (!info[key]) return;
+      info[key] = info[key]
+        .split(',')
+        .filter((v) => v !== '');
+    });
+
+    if (config.args.player_response) {
+      try {
+        info.player_response = JSON.parse(config.args.player_response);
+      } catch (err) {
+        return callback(
+          new Error('Error parsing `player_response`: ' + err.message));
+      }
+    }
+
+    info.fmt_list = info.fmt_list ?
+      info.fmt_list.map((format) => format.split('/')) : [];
+
+    info.formats = util.parseFormats(info);
+
+    // Add additional properties to info.
+    info = util.objectAssign(info, additional, false);
+
+    if (info.formats.length ||
+        config.args.dashmpd || info.dashmpd || info.hlsvp) {
+      var html5playerfile = urllib.resolve(VIDEO_URL, config.assets.js);
+      sig.getTokens(html5playerfile, options, (err, tokens) => {
+        if (err) return callback(err);
+
+        sig.decipherFormats(info.formats, tokens, options.debug);
+
+        var funcs = [];
+
+        if (config.args.dashmpd) {
+          let dashmpd = decipherURL(config.args.dashmpd, tokens);
+          funcs.push(getDashManifest.bind(null, dashmpd, options));
+        }
+
+        if (info.dashmpd && info.dashmpd !== config.args.dashmpd) {
+          let dashmpd = decipherURL(info.dashmpd, tokens);
+          funcs.push(getDashManifest.bind(null, dashmpd, options));
+        }
+
+        if (info.hlsvp) {
+          info.hlsvp = decipherURL(info.hlsvp, tokens);
+          funcs.push(getM3U8.bind(null, info.hlsvp, options));
+        }
+
+        util.parallel(funcs, (err, results) => {
+          if (err) return callback(err);
+          if (results[0]) { mergeFormats(info, results[0]); }
+          if (results[1]) { mergeFormats(info, results[1]); }
+          if (results[2]) { mergeFormats(info, results[2]); }
+          if (!info.formats.length) {
+            callback(new Error('No formats found'));
+            return;
+          }
+
+          if (options.debug) {
+            info.formats.forEach((format) => {
+              var itag = format.itag;
+              if (!FORMATS[itag]) {
+                console.warn(`No format metadata for itag ${itag} found`);
+              }
+            });
+          }
+
+          info.formats.forEach(util.addFormatMeta);
+          info.formats.sort(util.sortFormats);
+          callback(null, info);
+
+        });
+      });
+    } else {
+      callback(new Error('This video is unavailable'));
+    }
+  });
+}
+
+
+/**
+ * @param {String} url
+ * @param {Array.<String>} tokens
+ */
+function decipherURL(url, tokens) {
+  return url.replace(/\/s\/([a-fA-F0-9.]+)/, (_, s) => {
+    return '/signature/' + sig.decipher(tokens, s);
+  });
+}
+
+
+/**
+ * Merges formats from DASH or M3U8 with formats from video info page.
+ *
+ * @param {Object} info
+ * @param {Object} formatsMap
+ */
+function mergeFormats(info, formatsMap) {
+  info.formats.forEach((f) => {
+    var cf = formatsMap[f.itag];
+    if (cf) {
+      for (let key in f) { cf[key] = f[key]; }
+    } else {
+      formatsMap[f.itag] = f;
+    }
+  });
+  info.formats = [];
+  for (let itag in formatsMap) { info.formats.push(formatsMap[itag]); }
+}
+
+
+/**
+ * Gets additional DASH formats.
+ *
+ * @param {String} url
+ * @param {Object} options
+ * @param {Function(!Error, Array.<Object>)} callback
+ */
+function getDashManifest(url, options, callback) {
+  var formats = {};
+  var currentFormat = null;
+  var expectUrl = false;
+
+  var parser = sax.parser(false);
+  parser.onerror = callback;
+  parser.onopentag = (node) => {
+    if (node.name === 'REPRESENTATION') {
+      var itag = node.attributes.ID;
+      currentFormat = { itag: itag };
+      formats[itag] = currentFormat;
+    }
+    expectUrl = node.name === 'BASEURL';
+  };
+  parser.ontext = (text) => {
+    if (expectUrl) {
+      currentFormat.url = text;
+    }
+  };
+  parser.onend = () => { callback(null, formats); };
+
+  var req = request(urllib.resolve(VIDEO_URL, url), options.requestOptions);
+  req.setEncoding('utf8');
+  req.on('error', callback);
+  req.on('data', (chunk) => { parser.write(chunk); });
+  req.on('end', parser.close.bind(parser));
+}
+
+
+/**
+ * Gets additional formats.
+ *
+ * @param {String} url
+ * @param {Object} options
+ * @param {Function(!Error, Array.<Object>)} callback
+ */
+function getM3U8(url, options, callback) {
+  url = urllib.resolve(VIDEO_URL, url);
+  request(url, options.requestOptions, (err, res, body) => {
+    if (err) return callback(err);
+
+    var formats = {};
+    body
+      .split('\n')
+      .filter((line) => /https?:\/\//.test(line))
+      .forEach((line) => {
+        var itag = line.match(/\/itag\/(\d+)\//)[1];
+        formats[itag] = { itag: itag, url: line };
+      });
+    callback(null, formats);
+  });
+}
+
+},{"./formats":11,"./sig":14,"./util":15,"miniget":9,"querystring":32,"sax":10,"url":54}],14:[function(require,module,exports){
+'use strict';
+
+const url     = require('url');
+const request = require('miniget');
+
+
+// A shared cache to keep track of html5player.js tokens.
+exports.cache = new Map();
+
+
+/**
+ * Extract signature deciphering tokens from html5player file.
+ *
+ * @param {String} html5playerfile
+ * @param {Object} options
+ * @param {Function(!Error, Array.<String>)} callback
+ */
+exports.getTokens = (html5playerfile, options, callback) => {
+  var key, cachedTokens;
+  var rs = /(?:html5)?player[-_]([a-zA-Z0-9\-_]+)(?:\.js|\/)/
+    .exec(html5playerfile);
+  if (rs) {
+    key = rs[1];
+    cachedTokens = exports.cache.get(key);
+  } else {
+    console.warn('Could not extract html5player key:', html5playerfile);
+  }
+  if (cachedTokens) {
+    callback(null, cachedTokens);
+  } else {
+    request(html5playerfile, options.requestOptions, (err, res, body) => {
+      if (err) return callback(err);
+
+      var tokens = exports.extractActions(body);
+      if (key && (!tokens || !tokens.length)) {
+        callback(new Error('Could not extract signature deciphering actions'));
+        return;
+      }
+
+      exports.cache.set(key, tokens);
+      callback(null, tokens);
+    });
+  }
+};
+
+
+/**
+ * Decipher a signature based on action tokens.
+ *
+ * @param {Array.<String>} tokens
+ * @param {String} sig
+ * @return {String}
+ */
+exports.decipher = (tokens, sig) => {
+  sig = sig.split('');
+  for (let i = 0, len = tokens.length; i < len; i++) {
+    let token = tokens[i], pos;
+    switch (token[0]) {
+      case 'r':
+        sig = sig.reverse();
+        break;
+      case 'w':
+        pos = ~~token.slice(1);
+        sig = swapHeadAndPosition(sig, pos);
+        break;
+      case 's':
+        pos = ~~token.slice(1);
+        sig = sig.slice(pos);
+        break;
+      case 'p':
+        pos = ~~token.slice(1);
+        sig.splice(0, pos);
+        break;
+    }
+  }
+  return sig.join('');
+};
+
+
+/**
+ * Swaps the first element of an array with one of given position.
+ *
+ * @param {Array.<Object>} arr
+ * @param {Number} position
+ * @return {Array.<Object>}
+ */
+function swapHeadAndPosition(arr, position) {
+  var first = arr[0];
+  arr[0] = arr[position % arr.length];
+  arr[position] = first;
+  return arr;
+}
+
+
+var jsVarStr = '[a-zA-Z_\\$][a-zA-Z_0-9]*';
+var jsSingleQuoteStr = `'[^'\\\\]*(:?\\\\[\\s\\S][^'\\\\]*)*'`;
+var jsDoubleQuoteStr = `"[^"\\\\]*(:?\\\\[\\s\\S][^"\\\\]*)*"`;
+var jsQuoteStr = `(?:${jsSingleQuoteStr}|${jsDoubleQuoteStr})`;
+var jsKeyStr = `(?:${jsVarStr}|${jsQuoteStr})`;
+var jsPropStr = `(?:\\.${jsVarStr}|\\[${jsQuoteStr}\\])`;
+var jsEmptyStr = `(?:''|"")`;
+var reverseStr = ':function\\(a\\)\\{' +
+  '(?:return )?a\\.reverse\\(\\)' +
+'\\}';
+var sliceStr = ':function\\(a,b\\)\\{' +
+  'return a\\.slice\\(b\\)' +
+'\\}';
+var spliceStr = ':function\\(a,b\\)\\{' +
+  'a\\.splice\\(0,b\\)' +
+'\\}';
+var swapStr = ':function\\(a,b\\)\\{' +
+  'var c=a\\[0\\];a\\[0\\]=a\\[b%a\\.length\\];a\\[b\\]=c(?:;return a)?' +
+'\\}';
+var actionsObjRegexp = new RegExp(
+  `var (${jsVarStr})=\\{((?:(?:` +
+    jsKeyStr + reverseStr + '|' +
+    jsKeyStr + sliceStr   + '|' +
+    jsKeyStr + spliceStr  + '|' +
+    jsKeyStr + swapStr +
+  '),?\\r?\\n?)+)\\};'
+);
+var actionsFuncRegexp = new RegExp(`function(?: ${jsVarStr})?\\(a\\)\\{` +
+    `a=a\\.split\\(${jsEmptyStr}\\);\\s*` +
+    `((?:(?:a=)?${jsVarStr}` +
+    jsPropStr +
+    '\\(a,\\d+\\);)+)' +
+    `return a\\.join\\(${jsEmptyStr}\\)` +
+  '\\}'
+);
+var reverseRegexp = new RegExp(`(?:^|,)(${jsKeyStr})${reverseStr}`, 'm');
+var sliceRegexp   = new RegExp(`(?:^|,)(${jsKeyStr})${sliceStr}`, 'm');
+var spliceRegexp  = new RegExp(`(?:^|,)(${jsKeyStr})${spliceStr}`, 'm');
+var swapRegexp    = new RegExp(`(?:^|,)(${jsKeyStr})${swapStr}`, 'm');
+
+
+/**
+ * Extracts the actions that should be taken to decipher a signature.
+ *
+ * This searches for a function that performs string manipulations on
+ * the signature. We already know what the 3 possible changes to a signature
+ * are in order to decipher it. There is
+ *
+ * * Reversing the string.
+ * * Removing a number of characters from the beginning.
+ * * Swapping the first character with another position.
+ *
+ * Note, `Array#slice()` used to be used instead of `Array#splice()`,
+ * it's kept in case we encounter any older html5player files.
+ *
+ * After retrieving the function that does this, we can see what actions
+ * it takes on a signature.
+ *
+ * @param {String} body
+ * @return {Array.<String>}
+ */
+exports.extractActions = (body) => {
+  var objResult = actionsObjRegexp.exec(body);
+  var funcResult = actionsFuncRegexp.exec(body);
+  if (!objResult || !funcResult) { return null; }
+
+  var obj      = objResult[1].replace(/\$/g, '\\$');
+  var objBody  = objResult[2].replace(/\$/g, '\\$');
+  var funcBody = funcResult[1].replace(/\$/g, '\\$');
+
+  var result = reverseRegexp.exec(objBody);
+  var reverseKey = result && result[1]
+    .replace(/\$/g, '\\$')
+    .replace(/\$|^'|^"|'$|"$/g, '');
+  result = sliceRegexp.exec(objBody);
+  var sliceKey = result && result[1]
+    .replace(/\$/g, '\\$')
+    .replace(/\$|^'|^"|'$|"$/g, '');
+  result = spliceRegexp.exec(objBody);
+  var spliceKey = result && result[1]
+    .replace(/\$/g, '\\$')
+    .replace(/\$|^'|^"|'$|"$/g, '');
+  result = swapRegexp.exec(objBody);
+  var swapKey = result && result[1]
+    .replace(/\$/g, '\\$')
+    .replace(/\$|^'|^"|'$|"$/g, '');
+
+  var keys = `(${[reverseKey, sliceKey, spliceKey, swapKey].join('|')})`;
+  var myreg = '(?:a=)?' + obj +
+    `(?:\\.${keys}|\\['${keys}'\\]|\\["${keys}"\\])` +
+    '\\(a,(\\d+)\\)';
+  var tokenizeRegexp = new RegExp(myreg, 'g');
+  var tokens = [];
+  while ((result = tokenizeRegexp.exec(funcBody)) !== null) {
+    let key = result[1] || result[2] || result[3];
+    switch (key) {
+      case swapKey:
+        tokens.push('w' + result[4]);
+        break;
+      case reverseKey:
+        tokens.push('r');
+        break;
+      case sliceKey:
+        tokens.push('s' + result[4]);
+        break;
+      case spliceKey:
+        tokens.push('p' + result[4]);
+        break;
+    }
+  }
+  return tokens;
+};
+
+
+/**
+ * @param {Object} format
+ * @param {String} sig
+ * @param {Boolean} debug
+ */
+exports.setDownloadURL = (format, sig, debug) => {
+  var decodedUrl;
+  if (format.url) {
+    decodedUrl = format.url;
+  } else {
+    if (debug) {
+      console.warn('Download url not found for itag ' + format.itag);
+    }
+    return;
+  }
+
+  try {
+    decodedUrl = decodeURIComponent(decodedUrl);
+  } catch (err) {
+    if (debug) {
+      console.warn('Could not decode url: ' + err.message);
+    }
+    return;
+  }
+
+  // Make some adjustments to the final url.
+  var parsedUrl = url.parse(decodedUrl, true);
+
+  // Deleting the `search` part is necessary otherwise changes to
+  // `query` won't reflect when running `url.format()`
+  delete parsedUrl.search;
+
+  var query = parsedUrl.query;
+
+  // This is needed for a speedier download.
+  // See https://github.com/fent/node-ytdl-core/issues/127
+  query.ratebypass = 'yes';
+  if (sig) {
+    query.signature = sig;
+  }
+
+  format.url = url.format(parsedUrl);
+};
+
+
+/**
+ * Applies `sig.decipher()` to all format URL's.
+ *
+ * @param {Array.<Object>} formats
+ * @param {Array.<String>} tokens
+ * @param {Boolean} debug
+ */
+exports.decipherFormats = (formats, tokens, debug) => {
+  formats.forEach((format) => {
+    var sig = tokens && format.s ? exports.decipher(tokens, format.s) : null;
+    exports.setDownloadURL(format, sig, debug);
+  });
+};
+
+},{"miniget":9,"url":54}],15:[function(require,module,exports){
+'use strict';
+
+const qs       = require('querystring');
+const url      = require('url');
+const Entities = require('html-entities').AllHtmlEntities;
+const FORMATS  = require('./formats');
+
+
+const VIDEO_URL = 'https://www.youtube.com/watch?v=';
+
+
+/**
+ * Parses a string representation of amount of milliseconds.
+ *
+ * @param {String} time
+ * @return {Number}
+ */
+var timeRegexp = /(?:(\d+)h)?(?:(\d+)m(?!s))?(?:(\d+)s)?(?:(\d+)(?:ms)?)?/;
+exports.parseTime = (time) => {
+  var result = timeRegexp.exec(time.toString());
+  var hours  = result[1] || 0;
+  var mins   = result[2] || 0;
+  var secs   = result[3] || 0;
+  var ms     = result[4] || 0;
+
+  return hours * 3600000 + mins * 60000 + secs * 1000 + parseInt(ms, 10);
+};
+
+
+// Use these to help sort formats, higher is better.
+var audioEncodingRanks = {
+  mp3: 1,
+  vorbis: 2,
+  aac: 3,
+  opus: 4,
+  flac: 5,
+};
+var videoEncodingRanks = {
+  'Sorenson H.283': 1,
+  'MPEG-4 Visual': 2,
+  'VP8': 3,
+  'VP9': 4,
+  'H.264': 5,
+};
+
+
+/**
+ * Sort formats from highest quality to lowest.
+ * By resolution, then video bitrate, then audio bitrate.
+ *
+ * @param {Object} a
+ * @param {Object} b
+ */
+exports.sortFormats = (a, b) => {
+  var ares = a.resolution ? parseInt(a.resolution.slice(0, -1), 10) : 0;
+  var bres = b.resolution ? parseInt(b.resolution.slice(0, -1), 10) : 0;
+  var afeats = ~~!!ares * 2 + ~~!!a.audioBitrate;
+  var bfeats = ~~!!bres * 2 + ~~!!b.audioBitrate;
+
+  function getBitrate(c) {
+    if (c.bitrate) {
+      let s = c.bitrate.split('-');
+      return parseFloat(s[s.length - 1], 10);
+    } else {
+      return 0;
+    }
+  }
+
+  function audioScore(c) {
+    var abitrate = c.audioBitrate || 0;
+    var aenc = audioEncodingRanks[c.audioEncoding] || 0;
+    return abitrate + aenc / 10;
+  }
+
+  if (afeats === bfeats) {
+    if (ares === bres) {
+      let avbitrate = getBitrate(a);
+      let bvbitrate = getBitrate(b);
+      if (avbitrate === bvbitrate) {
+        let aascore = audioScore(a);
+        let bascore = audioScore(b);
+        if (aascore === bascore) {
+          let avenc = videoEncodingRanks[a.encoding] || 0;
+          let bvenc = videoEncodingRanks[b.encoding] || 0;
+          return bvenc - avenc;
+        } else {
+          return bascore - aascore;
+        }
+      } else {
+        return bvbitrate - avbitrate;
+      }
+    } else {
+      return bres - ares;
+    }
+  } else {
+    return bfeats - afeats;
+  }
+};
+
+
+/**
+ * Choose a format depending on the given options.
+ *
+ * @param {Array.<Object>} formats
+ * @param {Object} options
+ * @return {Object|Error}
+ */
+exports.chooseFormat = (formats, options) => {
+  if (typeof options.format === 'object') {
+    return options.format;
+  }
+
+  if (options.filter) {
+    formats = exports.filterFormats(formats, options.filter);
+    if (formats.length === 0) {
+      return new Error('No formats found with custom filter');
+    }
+  }
+
+  var format;
+  var quality = options.quality || 'highest';
+  switch (quality) {
+    case 'highest':
+      format = formats[0];
+      break;
+
+    case 'lowest':
+      format = formats[formats.length - 1];
+      break;
+
+    default: {
+      let getFormat = (itag) => {
+        return formats.find((format) => format.itag === '' + itag);
+      };
+      if (Array.isArray(quality)) {
+        quality.find((q) => format = getFormat(q));
+      } else {
+        format = getFormat(quality);
+      }
+    }
+
+  }
+
+  if (!format) {
+    return new Error('No such format found: ' + quality);
+  }
+  return format;
+};
+
+
+/**
+ * @param {Array.<Object>} formats
+ * @param {Function} filter
+ * @return {Array.<Object>}
+ */
+exports.filterFormats = (formats, filter) => {
+  var fn;
+  switch (filter) {
+    case 'video':
+      fn = (format) => format.bitrate;
+      break;
+
+    case 'videoonly':
+      fn = (format) => format.bitrate && !format.audioBitrate;
+      break;
+
+    case 'audio':
+      fn = (format) => format.audioBitrate;
+      break;
+
+    case 'audioonly':
+      fn = (format) => !format.bitrate && format.audioBitrate;
+      break;
+
+    default:
+      if (typeof filter === 'function') {
+        fn = filter;
+      } else {
+        throw new TypeError(`Given filter (${filter}) is not supported`);
+      }
+  }
+  return formats.filter(fn);
+};
+
+
+/**
+ * Extract string inbetween another.
+ *
+ * @param {String} haystack
+ * @param {String} left
+ * @param {String} right
+ * @return {String}
+ */
+exports.between = (haystack, left, right) => {
+  var pos;
+  pos = haystack.indexOf(left);
+  if (pos === -1) { return ''; }
+  haystack = haystack.slice(pos + left.length);
+  pos = haystack.indexOf(right);
+  if (pos === -1) { return ''; }
+  haystack = haystack.slice(0, pos);
+  return haystack;
+};
+
+
+/**
+ * Get video ID.
+ *
+ * There are a few type of video URL formats.
+ *  - http://www.youtube.com/watch?v=VIDEO_ID
+ *  - http://m.youtube.com/watch?v=VIDEO_ID
+ *  - http://youtu.be/VIDEO_ID
+ *  - http://www.youtube.com/v/VIDEO_ID
+ *  - http://www.youtube.com/embed/VIDEO_ID
+ *
+ * @param {String} link
+ * @return {String|Error}
+ */
+exports.getURLVideoID = function(link) {
+  var parsed = url.parse(link, true);
+  var id = parsed.query.v;
+  if (parsed.hostname === 'youtu.be' ||
+     (parsed.hostname === 'youtube.com' ||
+      parsed.hostname === 'www.youtube.com') && !id) {
+    var s = parsed.pathname.split('/');
+    id = s[s.length - 1];
+  }
+  if (!id) {
+    return new Error('No video id found: ' + link);
+  }
+  id = id.substring(0, 11);
+  if (!exports.validateID(id)) {
+    return new TypeError(`Video id (${id}) does not match expected ` +
+      `format (${idRegex.toString()})`);
+  }
+  return id;
+};
+
+
+/**
+ * Gets video ID either from a url or by checking if the given string
+ * matches the video ID format.
+ *
+ * @param {String} str
+ * @return {String|Error}
+ */
+exports.getVideoID = (str) => {
+  if (exports.validateID(str)) {
+    return str;
+  } else {
+    return exports.getURLVideoID(str);
+  }
+};
+
+
+/**
+ * Returns true if given id satifies YouTube's id format.
+ *
+ * @param {String} id
+ * @return {Boolean}
+ */
+var idRegex = /^[a-zA-Z0-9-_]{11}$/;
+exports.validateID = (id) => {
+  return idRegex.test(id);
+};
+
+
+/**
+ * Checks wether the input string includes a valid id.
+ *
+ * @param {String} string
+ * @return {Boolean}
+ */
+exports.validateURL = (string) => {
+  return !(exports.getURLVideoID(string) instanceof Error);
+};
+
+
+/**
+ * @param {Object} info
+ * @return {Array.<Object>}
+ */
+exports.parseFormats = (info) => {
+  var formats = [];
+  if (info.url_encoded_fmt_stream_map) {
+    formats = formats
+      .concat(info.url_encoded_fmt_stream_map.split(','));
+  }
+  if (info.adaptive_fmts) {
+    formats = formats.concat(info.adaptive_fmts.split(','));
+  }
+
+  formats = formats.map((format) => qs.parse(format));
+  delete info.url_encoded_fmt_stream_map;
+  delete info.adaptive_fmts;
+
+  return formats;
+};
+
+
+/**
+ * @param {Object} format
+ */
+exports.addFormatMeta = (format) => {
+  var meta = FORMATS[format.itag];
+  for (let key in meta) {
+    format[key] = meta[key];
+  }
+
+  if (/\/live\/1\//.test(format.url)) {
+    format.live = true;
+  }
+};
+
+
+/**
+ * Get video description from html
+ *
+ * @param {String} html
+ * @return {String}
+ */
+exports.getVideoDescription = (html) => {
+  var regex = /<p.*?id="eow-description".*?>(.+?)<\/p>[\n\r\s]*?<\/div>/im;
+  var description = html.match(regex);
+  return description ? new Entities().decode(description[1]
+    .replace(/\n/g, ' ')
+    .replace(/\s*<\s*br\s*\/?\s*>\s*/gi, '\n')
+    .replace(/<\s*\/\s*p\s*>\s*<\s*p[^>]*>/gi, '\n')
+    .replace(/<.*?>/gi, '')).trim() : '';
+};
+
+
+/**
+ * Get video Owner from html.
+ *
+ * @param {String} body
+ * @return {Object}
+ */
+var authorRegexp = /<a href="\/channel\/([\w-]+)"[^>]+>(.+?(?=<\/a>))/;
+var aliasRegExp = /<a href="\/user\/([^"]+)/;
+exports.getAuthor = (body) => {
+  var ownerinfo = exports.between(body,
+    '<div id="watch7-user-header" class=" spf-link ">',
+    '<div id="watch8-action-buttons" class="watch-action-buttons clearfix">');
+  if (ownerinfo === '') {
+    return {};
+  }
+  ownerinfo = new Entities().decode(ownerinfo);
+  var channelMatch = ownerinfo.match(authorRegexp);
+  var userMatch = ownerinfo.match(aliasRegExp);
+  return {
+    id: channelMatch[1],
+    name: channelMatch[2],
+    avatar: url.resolve(VIDEO_URL, exports.between(ownerinfo,
+      'data-thumb="', '"')),
+    user: userMatch ? userMatch[1] : null,
+    channel_url: 'https://www.youtube.com/channel/' + channelMatch[1],
+    user_url: userMatch ? 'https://www.youtube.com/user/' + userMatch[1] : null,
+  };
+};
+
+
+/**
+ * Get video published at from html.
+ *
+ * @param {String} body
+ * @return {String}
+ */
+exports.getPublished = (body) => {
+  return Date.parse(exports.between(body,
+    '<meta itemprop="datePublished" content="', '">'));
+};
+
+
+/**
+ * Get video published at from html.
+ * Credits to https://github.com/paixaop.
+ *
+ * @param {String} body
+ * @return {Array.<Object>}
+ */
+exports.getRelatedVideos = (body) => {
+  var jsonStr = exports.between(body, '\'RELATED_PLAYER_ARGS\': {"rvs":', '},');
+  try {
+    jsonStr = JSON.parse(jsonStr);
+  } catch (err) {
+    return [];
+  }
+  return jsonStr.split(',').map((link) => qs.parse(link));
+};
+
+
+/**
+ * @param {Array.<Function>} funcs
+ * @param {Function(!Error, Array.<Object>)} callback
+ */
+exports.parallel = (funcs, callback) => {
+  var funcsDone = 0;
+  var len = funcs.length;
+  var errGiven = false;
+  var results = [];
+
+  function checkDone(index, err, result) {
+    if (errGiven) { return; }
+    if (err) {
+      errGiven = true;
+      callback(err);
+      return;
+    }
+    results[index] = result;
+    if (++funcsDone === len) {
+      callback(null, results);
+    }
+  }
+
+  if (len > 0) {
+    funcs.forEach((f, i) => { f(checkDone.bind(null, i)); });
+  } else {
+    callback(null, results);
+  }
+};
+
+
+/**
+ * (Deep) assign object to another.
+ *
+ * @param {Object} target
+ * @param {Object} source
+ * @param {boolean} deep
+ */
+exports.objectAssign = (target, source, deep) => {
+  for (var key in source) {
+    if (deep && typeof source[key] === 'object' && source[key] != null &&
+        target[key]) {
+      exports.objectAssign(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+};
+
+
+/**
+ * Converts human friendly time to milliseconds. Supports the format
+ * 00:00:00.000 for hours, minutes, seconds, and milliseconds respectively.
+ * And 0ms, 0s, 0m, 0h, and together 1m1s.
+ *
+ * @param {String|Number} time
+ * @return {Number}
+ */
+var numberFormat = /^\d+$/;
+var timeFormat = /^(?:(?:(\d+):)?(\d{1,2}):)?(\d{1,2})(?:\.(\d{3}))?$/;
+var timeUnits = {
+  ms: 1,
+  s: 1000,
+  m: 60000,
+  h: 3600000,
+};
+exports.fromHumanTime = (time) => {
+  if (typeof time === 'number') { return time; }
+  if (numberFormat.test(time)) { return +time; }
+  var firstFormat = timeFormat.exec(time);
+  if (firstFormat) {
+    return +(firstFormat[1] || 0) * timeUnits.h +
+      +(firstFormat[2] || 0) * timeUnits.m +
+      +firstFormat[3] * timeUnits.s +
+      +(firstFormat[4] || 0);
+  } else {
+    var total = 0;
+    var r = /(\d+)(ms|s|m|h)/g;
+    var rs;
+    while ((rs = r.exec(time)) != null) {
+      total += +rs[1] * timeUnits[rs[2]];
+    }
+    return total;
+  }
+};
+
+},{"./formats":11,"html-entities":2,"querystring":32,"url":54}],16:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -114,9 +4589,9 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],2:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 
-},{}],3:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -1832,7 +6307,7 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":1,"ieee754":8}],4:[function(require,module,exports){
+},{"base64-js":16,"ieee754":23}],19:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -1898,7 +6373,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],5:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -2009,7 +6484,7 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../is-buffer/index.js")})
-},{"../../is-buffer/index.js":10}],6:[function(require,module,exports){
+},{"../../is-buffer/index.js":25}],21:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2313,7 +6788,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],7:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 var http = require('http')
 var url = require('url')
 
@@ -2346,7 +6821,7 @@ function validateParams (params) {
   return params
 }
 
-},{"http":33,"url":39}],8:[function(require,module,exports){
+},{"http":48,"url":54}],23:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -2432,7 +6907,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],9:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -2457,7 +6932,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],10:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -2480,14 +6955,14 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],11:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],12:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -2534,7 +7009,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 }
 
 }).call(this,require('_process'))
-},{"_process":13}],13:[function(require,module,exports){
+},{"_process":28}],28:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -2720,7 +7195,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],14:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -3257,7 +7732,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],15:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3343,7 +7818,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],16:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3430,16 +7905,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":15,"./encode":16}],18:[function(require,module,exports){
+},{"./decode":30,"./encode":31}],33:[function(require,module,exports){
 module.exports = require('./lib/_stream_duplex.js');
 
-},{"./lib/_stream_duplex.js":19}],19:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":34}],34:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3564,7 +8039,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":21,"./_stream_writable":23,"core-util-is":5,"inherits":9,"process-nextick-args":12}],20:[function(require,module,exports){
+},{"./_stream_readable":36,"./_stream_writable":38,"core-util-is":20,"inherits":24,"process-nextick-args":27}],35:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3612,7 +8087,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":22,"core-util-is":5,"inherits":9}],21:[function(require,module,exports){
+},{"./_stream_transform":37,"core-util-is":20,"inherits":24}],36:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4622,7 +9097,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":19,"./internal/streams/BufferList":24,"./internal/streams/destroy":25,"./internal/streams/stream":26,"_process":13,"core-util-is":5,"events":6,"inherits":9,"isarray":11,"process-nextick-args":12,"safe-buffer":31,"string_decoder/":37,"util":2}],22:[function(require,module,exports){
+},{"./_stream_duplex":34,"./internal/streams/BufferList":39,"./internal/streams/destroy":40,"./internal/streams/stream":41,"_process":28,"core-util-is":20,"events":21,"inherits":24,"isarray":26,"process-nextick-args":27,"safe-buffer":46,"string_decoder/":52,"util":17}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4837,7 +9312,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":19,"core-util-is":5,"inherits":9}],23:[function(require,module,exports){
+},{"./_stream_duplex":34,"core-util-is":20,"inherits":24}],38:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -5504,7 +9979,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":19,"./internal/streams/destroy":25,"./internal/streams/stream":26,"_process":13,"core-util-is":5,"inherits":9,"process-nextick-args":12,"safe-buffer":31,"util-deprecate":41}],24:[function(require,module,exports){
+},{"./_stream_duplex":34,"./internal/streams/destroy":40,"./internal/streams/stream":41,"_process":28,"core-util-is":20,"inherits":24,"process-nextick-args":27,"safe-buffer":46,"util-deprecate":56}],39:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -5579,7 +10054,7 @@ module.exports = function () {
 
   return BufferList;
 }();
-},{"safe-buffer":31}],25:[function(require,module,exports){
+},{"safe-buffer":46}],40:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -5652,13 +10127,13 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":12}],26:[function(require,module,exports){
+},{"process-nextick-args":27}],41:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":6}],27:[function(require,module,exports){
+},{"events":21}],42:[function(require,module,exports){
 module.exports = require('./readable').PassThrough
 
-},{"./readable":28}],28:[function(require,module,exports){
+},{"./readable":43}],43:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -5667,13 +10142,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":19,"./lib/_stream_passthrough.js":20,"./lib/_stream_readable.js":21,"./lib/_stream_transform.js":22,"./lib/_stream_writable.js":23}],29:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":34,"./lib/_stream_passthrough.js":35,"./lib/_stream_readable.js":36,"./lib/_stream_transform.js":37,"./lib/_stream_writable.js":38}],44:[function(require,module,exports){
 module.exports = require('./readable').Transform
 
-},{"./readable":28}],30:[function(require,module,exports){
+},{"./readable":43}],45:[function(require,module,exports){
 module.exports = require('./lib/_stream_writable.js');
 
-},{"./lib/_stream_writable.js":23}],31:[function(require,module,exports){
+},{"./lib/_stream_writable.js":38}],46:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -5737,7 +10212,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":3}],32:[function(require,module,exports){
+},{"buffer":18}],47:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5866,7 +10341,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":6,"inherits":9,"readable-stream/duplex.js":18,"readable-stream/passthrough.js":27,"readable-stream/readable.js":28,"readable-stream/transform.js":29,"readable-stream/writable.js":30}],33:[function(require,module,exports){
+},{"events":21,"inherits":24,"readable-stream/duplex.js":33,"readable-stream/passthrough.js":42,"readable-stream/readable.js":43,"readable-stream/transform.js":44,"readable-stream/writable.js":45}],48:[function(require,module,exports){
 (function (global){
 var ClientRequest = require('./lib/request')
 var extend = require('xtend')
@@ -5948,7 +10423,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":35,"builtin-status-codes":4,"url":39,"xtend":45}],34:[function(require,module,exports){
+},{"./lib/request":50,"builtin-status-codes":19,"url":54,"xtend":60}],49:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -6021,7 +10496,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],35:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -6331,7 +10806,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":34,"./response":36,"_process":13,"buffer":3,"inherits":9,"readable-stream":28,"to-arraybuffer":38}],36:[function(require,module,exports){
+},{"./capability":49,"./response":51,"_process":28,"buffer":18,"inherits":24,"readable-stream":43,"to-arraybuffer":53}],51:[function(require,module,exports){
 (function (process,global,Buffer){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -6517,7 +10992,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":34,"_process":13,"buffer":3,"inherits":9,"readable-stream":28}],37:[function(require,module,exports){
+},{"./capability":49,"_process":28,"buffer":18,"inherits":24,"readable-stream":43}],52:[function(require,module,exports){
 'use strict';
 
 var Buffer = require('safe-buffer').Buffer;
@@ -6790,7 +11265,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":31}],38:[function(require,module,exports){
+},{"safe-buffer":46}],53:[function(require,module,exports){
 var Buffer = require('buffer').Buffer
 
 module.exports = function (buf) {
@@ -6819,7 +11294,7 @@ module.exports = function (buf) {
 	}
 }
 
-},{"buffer":3}],39:[function(require,module,exports){
+},{"buffer":18}],54:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7553,7 +12028,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":40,"punycode":14,"querystring":17}],40:[function(require,module,exports){
+},{"./util":55,"punycode":29,"querystring":32}],55:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -7571,7 +12046,7 @@ module.exports = {
   }
 };
 
-},{}],41:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (global){
 
 /**
@@ -7642,16 +12117,16 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],42:[function(require,module,exports){
-arguments[4][9][0].apply(exports,arguments)
-},{"dup":9}],43:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
+arguments[4][24][0].apply(exports,arguments)
+},{"dup":24}],58:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],44:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -8241,7 +12716,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":43,"_process":13,"inherits":42}],45:[function(require,module,exports){
+},{"./support/isBuffer":58,"_process":28,"inherits":57}],60:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -8262,4479 +12737,4 @@ function extend() {
     return target
 }
 
-},{}],46:[function(require,module,exports){
-let ytdl = require('ytdl-core');
-
-document.getElementById('url-form').addEventListener('submit', download);
-
-let switchBtn = document.getElementById('switch-button');
-switchBtn.addEventListener('click', switchMode);
-
-function download(e) {
-    try {
-        // Getting the url of the video
-        let url = document.getElementById('vid-url').value;
-        console.log('youtube vid url: ', url);
-
-        // Fetching details
-        let videoId = getVideoIdWithQueryParams(url);
-        console.log('video id:', videoId);
-
-        // Trigger downloading the video via the browser
-        triggerBrowserDownload(videoId, isAudioOnly() ? 'audio' : 'video');
-
-    } catch(ex) {
-        console.log('err: ' + ex);
-        alert('Something went wrong: ' + ex);
-    }
-
-    e.preventDefault();
-}
-
-function getVideoIdWithQueryParams(url) {
-    let videoId = ytdl.getVideoID(url);
-    return url.slice(url.indexOf(videoId));
-}
-
-function triggerBrowserDownload(videoId, mode) {
-    if (isChrome()) {
-        // Preparing the file
-        let url = 'http://localhost:8000/download/' + mode + '/' + videoId;
-        console.log('url for browser download: ' + url);
-
-        //Creating new link node.
-        let link = document.createElement('a');
-        link.href = url;
-
-        if (link.download !== undefined) {
-            //Set HTML5 download attribute. This will prevent file from opening if supported.
-            let fileName = 'video.mp4';
-            link.download = fileName;
-        }
-
-        //Dispatching click event.
-        if (document.createEvent) {
-            let event = document.createEvent('MouseEvents');
-            event.initEvent('click', true, true);
-            link.dispatchEvent(event);
-            window.URL.revokeObjectURL(url);
-        } else {
-            link.click();
-        }
-    } else {
-        // Force file download (whether supported by server).
-        let query = '?download';
-        window.open(url + query, '_self');
-    }
-}
-
-function isChrome() {
-    return navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-}
-
-function isAudioOnly() {
-    return 'Audio' === switchBtn.getAttribute('value');
-}
-
-function switchMode() {
-    switchBtn.setAttribute('value', isAudioOnly() ? 'Video' : 'Audio');
-}
-
-},{"ytdl-core":57}],47:[function(require,module,exports){
-module.exports = {
-  XmlEntities: require('./lib/xml-entities.js'),
-  Html4Entities: require('./lib/html4-entities.js'),
-  Html5Entities: require('./lib/html5-entities.js'),
-  AllHtmlEntities: require('./lib/html5-entities.js')
-};
-
-},{"./lib/html4-entities.js":48,"./lib/html5-entities.js":49,"./lib/xml-entities.js":50}],48:[function(require,module,exports){
-var HTML_ALPHA = ['apos', 'nbsp', 'iexcl', 'cent', 'pound', 'curren', 'yen', 'brvbar', 'sect', 'uml', 'copy', 'ordf', 'laquo', 'not', 'shy', 'reg', 'macr', 'deg', 'plusmn', 'sup2', 'sup3', 'acute', 'micro', 'para', 'middot', 'cedil', 'sup1', 'ordm', 'raquo', 'frac14', 'frac12', 'frac34', 'iquest', 'Agrave', 'Aacute', 'Acirc', 'Atilde', 'Auml', 'Aring', 'Aelig', 'Ccedil', 'Egrave', 'Eacute', 'Ecirc', 'Euml', 'Igrave', 'Iacute', 'Icirc', 'Iuml', 'ETH', 'Ntilde', 'Ograve', 'Oacute', 'Ocirc', 'Otilde', 'Ouml', 'times', 'Oslash', 'Ugrave', 'Uacute', 'Ucirc', 'Uuml', 'Yacute', 'THORN', 'szlig', 'agrave', 'aacute', 'acirc', 'atilde', 'auml', 'aring', 'aelig', 'ccedil', 'egrave', 'eacute', 'ecirc', 'euml', 'igrave', 'iacute', 'icirc', 'iuml', 'eth', 'ntilde', 'ograve', 'oacute', 'ocirc', 'otilde', 'ouml', 'divide', 'oslash', 'ugrave', 'uacute', 'ucirc', 'uuml', 'yacute', 'thorn', 'yuml', 'quot', 'amp', 'lt', 'gt', 'OElig', 'oelig', 'Scaron', 'scaron', 'Yuml', 'circ', 'tilde', 'ensp', 'emsp', 'thinsp', 'zwnj', 'zwj', 'lrm', 'rlm', 'ndash', 'mdash', 'lsquo', 'rsquo', 'sbquo', 'ldquo', 'rdquo', 'bdquo', 'dagger', 'Dagger', 'permil', 'lsaquo', 'rsaquo', 'euro', 'fnof', 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega', 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigmaf', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'thetasym', 'upsih', 'piv', 'bull', 'hellip', 'prime', 'Prime', 'oline', 'frasl', 'weierp', 'image', 'real', 'trade', 'alefsym', 'larr', 'uarr', 'rarr', 'darr', 'harr', 'crarr', 'lArr', 'uArr', 'rArr', 'dArr', 'hArr', 'forall', 'part', 'exist', 'empty', 'nabla', 'isin', 'notin', 'ni', 'prod', 'sum', 'minus', 'lowast', 'radic', 'prop', 'infin', 'ang', 'and', 'or', 'cap', 'cup', 'int', 'there4', 'sim', 'cong', 'asymp', 'ne', 'equiv', 'le', 'ge', 'sub', 'sup', 'nsub', 'sube', 'supe', 'oplus', 'otimes', 'perp', 'sdot', 'lceil', 'rceil', 'lfloor', 'rfloor', 'lang', 'rang', 'loz', 'spades', 'clubs', 'hearts', 'diams'];
-var HTML_CODES = [39, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 34, 38, 60, 62, 338, 339, 352, 353, 376, 710, 732, 8194, 8195, 8201, 8204, 8205, 8206, 8207, 8211, 8212, 8216, 8217, 8218, 8220, 8221, 8222, 8224, 8225, 8240, 8249, 8250, 8364, 402, 913, 914, 915, 916, 917, 918, 919, 920, 921, 922, 923, 924, 925, 926, 927, 928, 929, 931, 932, 933, 934, 935, 936, 937, 945, 946, 947, 948, 949, 950, 951, 952, 953, 954, 955, 956, 957, 958, 959, 960, 961, 962, 963, 964, 965, 966, 967, 968, 969, 977, 978, 982, 8226, 8230, 8242, 8243, 8254, 8260, 8472, 8465, 8476, 8482, 8501, 8592, 8593, 8594, 8595, 8596, 8629, 8656, 8657, 8658, 8659, 8660, 8704, 8706, 8707, 8709, 8711, 8712, 8713, 8715, 8719, 8721, 8722, 8727, 8730, 8733, 8734, 8736, 8743, 8744, 8745, 8746, 8747, 8756, 8764, 8773, 8776, 8800, 8801, 8804, 8805, 8834, 8835, 8836, 8838, 8839, 8853, 8855, 8869, 8901, 8968, 8969, 8970, 8971, 9001, 9002, 9674, 9824, 9827, 9829, 9830];
-
-var alphaIndex = {};
-var numIndex = {};
-
-var i = 0;
-var length = HTML_ALPHA.length;
-while (i < length) {
-    var a = HTML_ALPHA[i];
-    var c = HTML_CODES[i];
-    alphaIndex[a] = String.fromCharCode(c);
-    numIndex[c] = a;
-    i++;
-}
-
-/**
- * @constructor
- */
-function Html4Entities() {}
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.prototype.decode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    return str.replace(/&(#?[\w\d]+);?/g, function(s, entity) {
-        var chr;
-        if (entity.charAt(0) === "#") {
-            var code = entity.charAt(1).toLowerCase() === 'x' ?
-                parseInt(entity.substr(2), 16) :
-                parseInt(entity.substr(1));
-
-            if (!(isNaN(code) || code < -32768 || code > 65535)) {
-                chr = String.fromCharCode(code);
-            }
-        } else {
-            chr = alphaIndex[entity];
-        }
-        return chr || s;
-    });
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.decode = function(str) {
-    return new Html4Entities().decode(str);
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.prototype.encode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var alpha = numIndex[str.charCodeAt(i)];
-        result += alpha ? "&" + alpha + ";" : str.charAt(i);
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.encode = function(str) {
-    return new Html4Entities().encode(str);
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.prototype.encodeNonUTF = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var cc = str.charCodeAt(i);
-        var alpha = numIndex[cc];
-        if (alpha) {
-            result += "&" + alpha + ";";
-        } else if (cc < 32 || cc > 126) {
-            result += "&#" + cc + ";";
-        } else {
-            result += str.charAt(i);
-        }
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.encodeNonUTF = function(str) {
-    return new Html4Entities().encodeNonUTF(str);
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.prototype.encodeNonASCII = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var c = str.charCodeAt(i);
-        if (c <= 255) {
-            result += str[i++];
-            continue;
-        }
-        result += '&#' + c + ';';
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html4Entities.encodeNonASCII = function(str) {
-    return new Html4Entities().encodeNonASCII(str);
-};
-
-module.exports = Html4Entities;
-
-},{}],49:[function(require,module,exports){
-var ENTITIES = [['Aacute', [193]], ['aacute', [225]], ['Abreve', [258]], ['abreve', [259]], ['ac', [8766]], ['acd', [8767]], ['acE', [8766, 819]], ['Acirc', [194]], ['acirc', [226]], ['acute', [180]], ['Acy', [1040]], ['acy', [1072]], ['AElig', [198]], ['aelig', [230]], ['af', [8289]], ['Afr', [120068]], ['afr', [120094]], ['Agrave', [192]], ['agrave', [224]], ['alefsym', [8501]], ['aleph', [8501]], ['Alpha', [913]], ['alpha', [945]], ['Amacr', [256]], ['amacr', [257]], ['amalg', [10815]], ['amp', [38]], ['AMP', [38]], ['andand', [10837]], ['And', [10835]], ['and', [8743]], ['andd', [10844]], ['andslope', [10840]], ['andv', [10842]], ['ang', [8736]], ['ange', [10660]], ['angle', [8736]], ['angmsdaa', [10664]], ['angmsdab', [10665]], ['angmsdac', [10666]], ['angmsdad', [10667]], ['angmsdae', [10668]], ['angmsdaf', [10669]], ['angmsdag', [10670]], ['angmsdah', [10671]], ['angmsd', [8737]], ['angrt', [8735]], ['angrtvb', [8894]], ['angrtvbd', [10653]], ['angsph', [8738]], ['angst', [197]], ['angzarr', [9084]], ['Aogon', [260]], ['aogon', [261]], ['Aopf', [120120]], ['aopf', [120146]], ['apacir', [10863]], ['ap', [8776]], ['apE', [10864]], ['ape', [8778]], ['apid', [8779]], ['apos', [39]], ['ApplyFunction', [8289]], ['approx', [8776]], ['approxeq', [8778]], ['Aring', [197]], ['aring', [229]], ['Ascr', [119964]], ['ascr', [119990]], ['Assign', [8788]], ['ast', [42]], ['asymp', [8776]], ['asympeq', [8781]], ['Atilde', [195]], ['atilde', [227]], ['Auml', [196]], ['auml', [228]], ['awconint', [8755]], ['awint', [10769]], ['backcong', [8780]], ['backepsilon', [1014]], ['backprime', [8245]], ['backsim', [8765]], ['backsimeq', [8909]], ['Backslash', [8726]], ['Barv', [10983]], ['barvee', [8893]], ['barwed', [8965]], ['Barwed', [8966]], ['barwedge', [8965]], ['bbrk', [9141]], ['bbrktbrk', [9142]], ['bcong', [8780]], ['Bcy', [1041]], ['bcy', [1073]], ['bdquo', [8222]], ['becaus', [8757]], ['because', [8757]], ['Because', [8757]], ['bemptyv', [10672]], ['bepsi', [1014]], ['bernou', [8492]], ['Bernoullis', [8492]], ['Beta', [914]], ['beta', [946]], ['beth', [8502]], ['between', [8812]], ['Bfr', [120069]], ['bfr', [120095]], ['bigcap', [8898]], ['bigcirc', [9711]], ['bigcup', [8899]], ['bigodot', [10752]], ['bigoplus', [10753]], ['bigotimes', [10754]], ['bigsqcup', [10758]], ['bigstar', [9733]], ['bigtriangledown', [9661]], ['bigtriangleup', [9651]], ['biguplus', [10756]], ['bigvee', [8897]], ['bigwedge', [8896]], ['bkarow', [10509]], ['blacklozenge', [10731]], ['blacksquare', [9642]], ['blacktriangle', [9652]], ['blacktriangledown', [9662]], ['blacktriangleleft', [9666]], ['blacktriangleright', [9656]], ['blank', [9251]], ['blk12', [9618]], ['blk14', [9617]], ['blk34', [9619]], ['block', [9608]], ['bne', [61, 8421]], ['bnequiv', [8801, 8421]], ['bNot', [10989]], ['bnot', [8976]], ['Bopf', [120121]], ['bopf', [120147]], ['bot', [8869]], ['bottom', [8869]], ['bowtie', [8904]], ['boxbox', [10697]], ['boxdl', [9488]], ['boxdL', [9557]], ['boxDl', [9558]], ['boxDL', [9559]], ['boxdr', [9484]], ['boxdR', [9554]], ['boxDr', [9555]], ['boxDR', [9556]], ['boxh', [9472]], ['boxH', [9552]], ['boxhd', [9516]], ['boxHd', [9572]], ['boxhD', [9573]], ['boxHD', [9574]], ['boxhu', [9524]], ['boxHu', [9575]], ['boxhU', [9576]], ['boxHU', [9577]], ['boxminus', [8863]], ['boxplus', [8862]], ['boxtimes', [8864]], ['boxul', [9496]], ['boxuL', [9563]], ['boxUl', [9564]], ['boxUL', [9565]], ['boxur', [9492]], ['boxuR', [9560]], ['boxUr', [9561]], ['boxUR', [9562]], ['boxv', [9474]], ['boxV', [9553]], ['boxvh', [9532]], ['boxvH', [9578]], ['boxVh', [9579]], ['boxVH', [9580]], ['boxvl', [9508]], ['boxvL', [9569]], ['boxVl', [9570]], ['boxVL', [9571]], ['boxvr', [9500]], ['boxvR', [9566]], ['boxVr', [9567]], ['boxVR', [9568]], ['bprime', [8245]], ['breve', [728]], ['Breve', [728]], ['brvbar', [166]], ['bscr', [119991]], ['Bscr', [8492]], ['bsemi', [8271]], ['bsim', [8765]], ['bsime', [8909]], ['bsolb', [10693]], ['bsol', [92]], ['bsolhsub', [10184]], ['bull', [8226]], ['bullet', [8226]], ['bump', [8782]], ['bumpE', [10926]], ['bumpe', [8783]], ['Bumpeq', [8782]], ['bumpeq', [8783]], ['Cacute', [262]], ['cacute', [263]], ['capand', [10820]], ['capbrcup', [10825]], ['capcap', [10827]], ['cap', [8745]], ['Cap', [8914]], ['capcup', [10823]], ['capdot', [10816]], ['CapitalDifferentialD', [8517]], ['caps', [8745, 65024]], ['caret', [8257]], ['caron', [711]], ['Cayleys', [8493]], ['ccaps', [10829]], ['Ccaron', [268]], ['ccaron', [269]], ['Ccedil', [199]], ['ccedil', [231]], ['Ccirc', [264]], ['ccirc', [265]], ['Cconint', [8752]], ['ccups', [10828]], ['ccupssm', [10832]], ['Cdot', [266]], ['cdot', [267]], ['cedil', [184]], ['Cedilla', [184]], ['cemptyv', [10674]], ['cent', [162]], ['centerdot', [183]], ['CenterDot', [183]], ['cfr', [120096]], ['Cfr', [8493]], ['CHcy', [1063]], ['chcy', [1095]], ['check', [10003]], ['checkmark', [10003]], ['Chi', [935]], ['chi', [967]], ['circ', [710]], ['circeq', [8791]], ['circlearrowleft', [8634]], ['circlearrowright', [8635]], ['circledast', [8859]], ['circledcirc', [8858]], ['circleddash', [8861]], ['CircleDot', [8857]], ['circledR', [174]], ['circledS', [9416]], ['CircleMinus', [8854]], ['CirclePlus', [8853]], ['CircleTimes', [8855]], ['cir', [9675]], ['cirE', [10691]], ['cire', [8791]], ['cirfnint', [10768]], ['cirmid', [10991]], ['cirscir', [10690]], ['ClockwiseContourIntegral', [8754]], ['clubs', [9827]], ['clubsuit', [9827]], ['colon', [58]], ['Colon', [8759]], ['Colone', [10868]], ['colone', [8788]], ['coloneq', [8788]], ['comma', [44]], ['commat', [64]], ['comp', [8705]], ['compfn', [8728]], ['complement', [8705]], ['complexes', [8450]], ['cong', [8773]], ['congdot', [10861]], ['Congruent', [8801]], ['conint', [8750]], ['Conint', [8751]], ['ContourIntegral', [8750]], ['copf', [120148]], ['Copf', [8450]], ['coprod', [8720]], ['Coproduct', [8720]], ['copy', [169]], ['COPY', [169]], ['copysr', [8471]], ['CounterClockwiseContourIntegral', [8755]], ['crarr', [8629]], ['cross', [10007]], ['Cross', [10799]], ['Cscr', [119966]], ['cscr', [119992]], ['csub', [10959]], ['csube', [10961]], ['csup', [10960]], ['csupe', [10962]], ['ctdot', [8943]], ['cudarrl', [10552]], ['cudarrr', [10549]], ['cuepr', [8926]], ['cuesc', [8927]], ['cularr', [8630]], ['cularrp', [10557]], ['cupbrcap', [10824]], ['cupcap', [10822]], ['CupCap', [8781]], ['cup', [8746]], ['Cup', [8915]], ['cupcup', [10826]], ['cupdot', [8845]], ['cupor', [10821]], ['cups', [8746, 65024]], ['curarr', [8631]], ['curarrm', [10556]], ['curlyeqprec', [8926]], ['curlyeqsucc', [8927]], ['curlyvee', [8910]], ['curlywedge', [8911]], ['curren', [164]], ['curvearrowleft', [8630]], ['curvearrowright', [8631]], ['cuvee', [8910]], ['cuwed', [8911]], ['cwconint', [8754]], ['cwint', [8753]], ['cylcty', [9005]], ['dagger', [8224]], ['Dagger', [8225]], ['daleth', [8504]], ['darr', [8595]], ['Darr', [8609]], ['dArr', [8659]], ['dash', [8208]], ['Dashv', [10980]], ['dashv', [8867]], ['dbkarow', [10511]], ['dblac', [733]], ['Dcaron', [270]], ['dcaron', [271]], ['Dcy', [1044]], ['dcy', [1076]], ['ddagger', [8225]], ['ddarr', [8650]], ['DD', [8517]], ['dd', [8518]], ['DDotrahd', [10513]], ['ddotseq', [10871]], ['deg', [176]], ['Del', [8711]], ['Delta', [916]], ['delta', [948]], ['demptyv', [10673]], ['dfisht', [10623]], ['Dfr', [120071]], ['dfr', [120097]], ['dHar', [10597]], ['dharl', [8643]], ['dharr', [8642]], ['DiacriticalAcute', [180]], ['DiacriticalDot', [729]], ['DiacriticalDoubleAcute', [733]], ['DiacriticalGrave', [96]], ['DiacriticalTilde', [732]], ['diam', [8900]], ['diamond', [8900]], ['Diamond', [8900]], ['diamondsuit', [9830]], ['diams', [9830]], ['die', [168]], ['DifferentialD', [8518]], ['digamma', [989]], ['disin', [8946]], ['div', [247]], ['divide', [247]], ['divideontimes', [8903]], ['divonx', [8903]], ['DJcy', [1026]], ['djcy', [1106]], ['dlcorn', [8990]], ['dlcrop', [8973]], ['dollar', [36]], ['Dopf', [120123]], ['dopf', [120149]], ['Dot', [168]], ['dot', [729]], ['DotDot', [8412]], ['doteq', [8784]], ['doteqdot', [8785]], ['DotEqual', [8784]], ['dotminus', [8760]], ['dotplus', [8724]], ['dotsquare', [8865]], ['doublebarwedge', [8966]], ['DoubleContourIntegral', [8751]], ['DoubleDot', [168]], ['DoubleDownArrow', [8659]], ['DoubleLeftArrow', [8656]], ['DoubleLeftRightArrow', [8660]], ['DoubleLeftTee', [10980]], ['DoubleLongLeftArrow', [10232]], ['DoubleLongLeftRightArrow', [10234]], ['DoubleLongRightArrow', [10233]], ['DoubleRightArrow', [8658]], ['DoubleRightTee', [8872]], ['DoubleUpArrow', [8657]], ['DoubleUpDownArrow', [8661]], ['DoubleVerticalBar', [8741]], ['DownArrowBar', [10515]], ['downarrow', [8595]], ['DownArrow', [8595]], ['Downarrow', [8659]], ['DownArrowUpArrow', [8693]], ['DownBreve', [785]], ['downdownarrows', [8650]], ['downharpoonleft', [8643]], ['downharpoonright', [8642]], ['DownLeftRightVector', [10576]], ['DownLeftTeeVector', [10590]], ['DownLeftVectorBar', [10582]], ['DownLeftVector', [8637]], ['DownRightTeeVector', [10591]], ['DownRightVectorBar', [10583]], ['DownRightVector', [8641]], ['DownTeeArrow', [8615]], ['DownTee', [8868]], ['drbkarow', [10512]], ['drcorn', [8991]], ['drcrop', [8972]], ['Dscr', [119967]], ['dscr', [119993]], ['DScy', [1029]], ['dscy', [1109]], ['dsol', [10742]], ['Dstrok', [272]], ['dstrok', [273]], ['dtdot', [8945]], ['dtri', [9663]], ['dtrif', [9662]], ['duarr', [8693]], ['duhar', [10607]], ['dwangle', [10662]], ['DZcy', [1039]], ['dzcy', [1119]], ['dzigrarr', [10239]], ['Eacute', [201]], ['eacute', [233]], ['easter', [10862]], ['Ecaron', [282]], ['ecaron', [283]], ['Ecirc', [202]], ['ecirc', [234]], ['ecir', [8790]], ['ecolon', [8789]], ['Ecy', [1069]], ['ecy', [1101]], ['eDDot', [10871]], ['Edot', [278]], ['edot', [279]], ['eDot', [8785]], ['ee', [8519]], ['efDot', [8786]], ['Efr', [120072]], ['efr', [120098]], ['eg', [10906]], ['Egrave', [200]], ['egrave', [232]], ['egs', [10902]], ['egsdot', [10904]], ['el', [10905]], ['Element', [8712]], ['elinters', [9191]], ['ell', [8467]], ['els', [10901]], ['elsdot', [10903]], ['Emacr', [274]], ['emacr', [275]], ['empty', [8709]], ['emptyset', [8709]], ['EmptySmallSquare', [9723]], ['emptyv', [8709]], ['EmptyVerySmallSquare', [9643]], ['emsp13', [8196]], ['emsp14', [8197]], ['emsp', [8195]], ['ENG', [330]], ['eng', [331]], ['ensp', [8194]], ['Eogon', [280]], ['eogon', [281]], ['Eopf', [120124]], ['eopf', [120150]], ['epar', [8917]], ['eparsl', [10723]], ['eplus', [10865]], ['epsi', [949]], ['Epsilon', [917]], ['epsilon', [949]], ['epsiv', [1013]], ['eqcirc', [8790]], ['eqcolon', [8789]], ['eqsim', [8770]], ['eqslantgtr', [10902]], ['eqslantless', [10901]], ['Equal', [10869]], ['equals', [61]], ['EqualTilde', [8770]], ['equest', [8799]], ['Equilibrium', [8652]], ['equiv', [8801]], ['equivDD', [10872]], ['eqvparsl', [10725]], ['erarr', [10609]], ['erDot', [8787]], ['escr', [8495]], ['Escr', [8496]], ['esdot', [8784]], ['Esim', [10867]], ['esim', [8770]], ['Eta', [919]], ['eta', [951]], ['ETH', [208]], ['eth', [240]], ['Euml', [203]], ['euml', [235]], ['euro', [8364]], ['excl', [33]], ['exist', [8707]], ['Exists', [8707]], ['expectation', [8496]], ['exponentiale', [8519]], ['ExponentialE', [8519]], ['fallingdotseq', [8786]], ['Fcy', [1060]], ['fcy', [1092]], ['female', [9792]], ['ffilig', [64259]], ['fflig', [64256]], ['ffllig', [64260]], ['Ffr', [120073]], ['ffr', [120099]], ['filig', [64257]], ['FilledSmallSquare', [9724]], ['FilledVerySmallSquare', [9642]], ['fjlig', [102, 106]], ['flat', [9837]], ['fllig', [64258]], ['fltns', [9649]], ['fnof', [402]], ['Fopf', [120125]], ['fopf', [120151]], ['forall', [8704]], ['ForAll', [8704]], ['fork', [8916]], ['forkv', [10969]], ['Fouriertrf', [8497]], ['fpartint', [10765]], ['frac12', [189]], ['frac13', [8531]], ['frac14', [188]], ['frac15', [8533]], ['frac16', [8537]], ['frac18', [8539]], ['frac23', [8532]], ['frac25', [8534]], ['frac34', [190]], ['frac35', [8535]], ['frac38', [8540]], ['frac45', [8536]], ['frac56', [8538]], ['frac58', [8541]], ['frac78', [8542]], ['frasl', [8260]], ['frown', [8994]], ['fscr', [119995]], ['Fscr', [8497]], ['gacute', [501]], ['Gamma', [915]], ['gamma', [947]], ['Gammad', [988]], ['gammad', [989]], ['gap', [10886]], ['Gbreve', [286]], ['gbreve', [287]], ['Gcedil', [290]], ['Gcirc', [284]], ['gcirc', [285]], ['Gcy', [1043]], ['gcy', [1075]], ['Gdot', [288]], ['gdot', [289]], ['ge', [8805]], ['gE', [8807]], ['gEl', [10892]], ['gel', [8923]], ['geq', [8805]], ['geqq', [8807]], ['geqslant', [10878]], ['gescc', [10921]], ['ges', [10878]], ['gesdot', [10880]], ['gesdoto', [10882]], ['gesdotol', [10884]], ['gesl', [8923, 65024]], ['gesles', [10900]], ['Gfr', [120074]], ['gfr', [120100]], ['gg', [8811]], ['Gg', [8921]], ['ggg', [8921]], ['gimel', [8503]], ['GJcy', [1027]], ['gjcy', [1107]], ['gla', [10917]], ['gl', [8823]], ['glE', [10898]], ['glj', [10916]], ['gnap', [10890]], ['gnapprox', [10890]], ['gne', [10888]], ['gnE', [8809]], ['gneq', [10888]], ['gneqq', [8809]], ['gnsim', [8935]], ['Gopf', [120126]], ['gopf', [120152]], ['grave', [96]], ['GreaterEqual', [8805]], ['GreaterEqualLess', [8923]], ['GreaterFullEqual', [8807]], ['GreaterGreater', [10914]], ['GreaterLess', [8823]], ['GreaterSlantEqual', [10878]], ['GreaterTilde', [8819]], ['Gscr', [119970]], ['gscr', [8458]], ['gsim', [8819]], ['gsime', [10894]], ['gsiml', [10896]], ['gtcc', [10919]], ['gtcir', [10874]], ['gt', [62]], ['GT', [62]], ['Gt', [8811]], ['gtdot', [8919]], ['gtlPar', [10645]], ['gtquest', [10876]], ['gtrapprox', [10886]], ['gtrarr', [10616]], ['gtrdot', [8919]], ['gtreqless', [8923]], ['gtreqqless', [10892]], ['gtrless', [8823]], ['gtrsim', [8819]], ['gvertneqq', [8809, 65024]], ['gvnE', [8809, 65024]], ['Hacek', [711]], ['hairsp', [8202]], ['half', [189]], ['hamilt', [8459]], ['HARDcy', [1066]], ['hardcy', [1098]], ['harrcir', [10568]], ['harr', [8596]], ['hArr', [8660]], ['harrw', [8621]], ['Hat', [94]], ['hbar', [8463]], ['Hcirc', [292]], ['hcirc', [293]], ['hearts', [9829]], ['heartsuit', [9829]], ['hellip', [8230]], ['hercon', [8889]], ['hfr', [120101]], ['Hfr', [8460]], ['HilbertSpace', [8459]], ['hksearow', [10533]], ['hkswarow', [10534]], ['hoarr', [8703]], ['homtht', [8763]], ['hookleftarrow', [8617]], ['hookrightarrow', [8618]], ['hopf', [120153]], ['Hopf', [8461]], ['horbar', [8213]], ['HorizontalLine', [9472]], ['hscr', [119997]], ['Hscr', [8459]], ['hslash', [8463]], ['Hstrok', [294]], ['hstrok', [295]], ['HumpDownHump', [8782]], ['HumpEqual', [8783]], ['hybull', [8259]], ['hyphen', [8208]], ['Iacute', [205]], ['iacute', [237]], ['ic', [8291]], ['Icirc', [206]], ['icirc', [238]], ['Icy', [1048]], ['icy', [1080]], ['Idot', [304]], ['IEcy', [1045]], ['iecy', [1077]], ['iexcl', [161]], ['iff', [8660]], ['ifr', [120102]], ['Ifr', [8465]], ['Igrave', [204]], ['igrave', [236]], ['ii', [8520]], ['iiiint', [10764]], ['iiint', [8749]], ['iinfin', [10716]], ['iiota', [8489]], ['IJlig', [306]], ['ijlig', [307]], ['Imacr', [298]], ['imacr', [299]], ['image', [8465]], ['ImaginaryI', [8520]], ['imagline', [8464]], ['imagpart', [8465]], ['imath', [305]], ['Im', [8465]], ['imof', [8887]], ['imped', [437]], ['Implies', [8658]], ['incare', [8453]], ['in', [8712]], ['infin', [8734]], ['infintie', [10717]], ['inodot', [305]], ['intcal', [8890]], ['int', [8747]], ['Int', [8748]], ['integers', [8484]], ['Integral', [8747]], ['intercal', [8890]], ['Intersection', [8898]], ['intlarhk', [10775]], ['intprod', [10812]], ['InvisibleComma', [8291]], ['InvisibleTimes', [8290]], ['IOcy', [1025]], ['iocy', [1105]], ['Iogon', [302]], ['iogon', [303]], ['Iopf', [120128]], ['iopf', [120154]], ['Iota', [921]], ['iota', [953]], ['iprod', [10812]], ['iquest', [191]], ['iscr', [119998]], ['Iscr', [8464]], ['isin', [8712]], ['isindot', [8949]], ['isinE', [8953]], ['isins', [8948]], ['isinsv', [8947]], ['isinv', [8712]], ['it', [8290]], ['Itilde', [296]], ['itilde', [297]], ['Iukcy', [1030]], ['iukcy', [1110]], ['Iuml', [207]], ['iuml', [239]], ['Jcirc', [308]], ['jcirc', [309]], ['Jcy', [1049]], ['jcy', [1081]], ['Jfr', [120077]], ['jfr', [120103]], ['jmath', [567]], ['Jopf', [120129]], ['jopf', [120155]], ['Jscr', [119973]], ['jscr', [119999]], ['Jsercy', [1032]], ['jsercy', [1112]], ['Jukcy', [1028]], ['jukcy', [1108]], ['Kappa', [922]], ['kappa', [954]], ['kappav', [1008]], ['Kcedil', [310]], ['kcedil', [311]], ['Kcy', [1050]], ['kcy', [1082]], ['Kfr', [120078]], ['kfr', [120104]], ['kgreen', [312]], ['KHcy', [1061]], ['khcy', [1093]], ['KJcy', [1036]], ['kjcy', [1116]], ['Kopf', [120130]], ['kopf', [120156]], ['Kscr', [119974]], ['kscr', [120000]], ['lAarr', [8666]], ['Lacute', [313]], ['lacute', [314]], ['laemptyv', [10676]], ['lagran', [8466]], ['Lambda', [923]], ['lambda', [955]], ['lang', [10216]], ['Lang', [10218]], ['langd', [10641]], ['langle', [10216]], ['lap', [10885]], ['Laplacetrf', [8466]], ['laquo', [171]], ['larrb', [8676]], ['larrbfs', [10527]], ['larr', [8592]], ['Larr', [8606]], ['lArr', [8656]], ['larrfs', [10525]], ['larrhk', [8617]], ['larrlp', [8619]], ['larrpl', [10553]], ['larrsim', [10611]], ['larrtl', [8610]], ['latail', [10521]], ['lAtail', [10523]], ['lat', [10923]], ['late', [10925]], ['lates', [10925, 65024]], ['lbarr', [10508]], ['lBarr', [10510]], ['lbbrk', [10098]], ['lbrace', [123]], ['lbrack', [91]], ['lbrke', [10635]], ['lbrksld', [10639]], ['lbrkslu', [10637]], ['Lcaron', [317]], ['lcaron', [318]], ['Lcedil', [315]], ['lcedil', [316]], ['lceil', [8968]], ['lcub', [123]], ['Lcy', [1051]], ['lcy', [1083]], ['ldca', [10550]], ['ldquo', [8220]], ['ldquor', [8222]], ['ldrdhar', [10599]], ['ldrushar', [10571]], ['ldsh', [8626]], ['le', [8804]], ['lE', [8806]], ['LeftAngleBracket', [10216]], ['LeftArrowBar', [8676]], ['leftarrow', [8592]], ['LeftArrow', [8592]], ['Leftarrow', [8656]], ['LeftArrowRightArrow', [8646]], ['leftarrowtail', [8610]], ['LeftCeiling', [8968]], ['LeftDoubleBracket', [10214]], ['LeftDownTeeVector', [10593]], ['LeftDownVectorBar', [10585]], ['LeftDownVector', [8643]], ['LeftFloor', [8970]], ['leftharpoondown', [8637]], ['leftharpoonup', [8636]], ['leftleftarrows', [8647]], ['leftrightarrow', [8596]], ['LeftRightArrow', [8596]], ['Leftrightarrow', [8660]], ['leftrightarrows', [8646]], ['leftrightharpoons', [8651]], ['leftrightsquigarrow', [8621]], ['LeftRightVector', [10574]], ['LeftTeeArrow', [8612]], ['LeftTee', [8867]], ['LeftTeeVector', [10586]], ['leftthreetimes', [8907]], ['LeftTriangleBar', [10703]], ['LeftTriangle', [8882]], ['LeftTriangleEqual', [8884]], ['LeftUpDownVector', [10577]], ['LeftUpTeeVector', [10592]], ['LeftUpVectorBar', [10584]], ['LeftUpVector', [8639]], ['LeftVectorBar', [10578]], ['LeftVector', [8636]], ['lEg', [10891]], ['leg', [8922]], ['leq', [8804]], ['leqq', [8806]], ['leqslant', [10877]], ['lescc', [10920]], ['les', [10877]], ['lesdot', [10879]], ['lesdoto', [10881]], ['lesdotor', [10883]], ['lesg', [8922, 65024]], ['lesges', [10899]], ['lessapprox', [10885]], ['lessdot', [8918]], ['lesseqgtr', [8922]], ['lesseqqgtr', [10891]], ['LessEqualGreater', [8922]], ['LessFullEqual', [8806]], ['LessGreater', [8822]], ['lessgtr', [8822]], ['LessLess', [10913]], ['lesssim', [8818]], ['LessSlantEqual', [10877]], ['LessTilde', [8818]], ['lfisht', [10620]], ['lfloor', [8970]], ['Lfr', [120079]], ['lfr', [120105]], ['lg', [8822]], ['lgE', [10897]], ['lHar', [10594]], ['lhard', [8637]], ['lharu', [8636]], ['lharul', [10602]], ['lhblk', [9604]], ['LJcy', [1033]], ['ljcy', [1113]], ['llarr', [8647]], ['ll', [8810]], ['Ll', [8920]], ['llcorner', [8990]], ['Lleftarrow', [8666]], ['llhard', [10603]], ['lltri', [9722]], ['Lmidot', [319]], ['lmidot', [320]], ['lmoustache', [9136]], ['lmoust', [9136]], ['lnap', [10889]], ['lnapprox', [10889]], ['lne', [10887]], ['lnE', [8808]], ['lneq', [10887]], ['lneqq', [8808]], ['lnsim', [8934]], ['loang', [10220]], ['loarr', [8701]], ['lobrk', [10214]], ['longleftarrow', [10229]], ['LongLeftArrow', [10229]], ['Longleftarrow', [10232]], ['longleftrightarrow', [10231]], ['LongLeftRightArrow', [10231]], ['Longleftrightarrow', [10234]], ['longmapsto', [10236]], ['longrightarrow', [10230]], ['LongRightArrow', [10230]], ['Longrightarrow', [10233]], ['looparrowleft', [8619]], ['looparrowright', [8620]], ['lopar', [10629]], ['Lopf', [120131]], ['lopf', [120157]], ['loplus', [10797]], ['lotimes', [10804]], ['lowast', [8727]], ['lowbar', [95]], ['LowerLeftArrow', [8601]], ['LowerRightArrow', [8600]], ['loz', [9674]], ['lozenge', [9674]], ['lozf', [10731]], ['lpar', [40]], ['lparlt', [10643]], ['lrarr', [8646]], ['lrcorner', [8991]], ['lrhar', [8651]], ['lrhard', [10605]], ['lrm', [8206]], ['lrtri', [8895]], ['lsaquo', [8249]], ['lscr', [120001]], ['Lscr', [8466]], ['lsh', [8624]], ['Lsh', [8624]], ['lsim', [8818]], ['lsime', [10893]], ['lsimg', [10895]], ['lsqb', [91]], ['lsquo', [8216]], ['lsquor', [8218]], ['Lstrok', [321]], ['lstrok', [322]], ['ltcc', [10918]], ['ltcir', [10873]], ['lt', [60]], ['LT', [60]], ['Lt', [8810]], ['ltdot', [8918]], ['lthree', [8907]], ['ltimes', [8905]], ['ltlarr', [10614]], ['ltquest', [10875]], ['ltri', [9667]], ['ltrie', [8884]], ['ltrif', [9666]], ['ltrPar', [10646]], ['lurdshar', [10570]], ['luruhar', [10598]], ['lvertneqq', [8808, 65024]], ['lvnE', [8808, 65024]], ['macr', [175]], ['male', [9794]], ['malt', [10016]], ['maltese', [10016]], ['Map', [10501]], ['map', [8614]], ['mapsto', [8614]], ['mapstodown', [8615]], ['mapstoleft', [8612]], ['mapstoup', [8613]], ['marker', [9646]], ['mcomma', [10793]], ['Mcy', [1052]], ['mcy', [1084]], ['mdash', [8212]], ['mDDot', [8762]], ['measuredangle', [8737]], ['MediumSpace', [8287]], ['Mellintrf', [8499]], ['Mfr', [120080]], ['mfr', [120106]], ['mho', [8487]], ['micro', [181]], ['midast', [42]], ['midcir', [10992]], ['mid', [8739]], ['middot', [183]], ['minusb', [8863]], ['minus', [8722]], ['minusd', [8760]], ['minusdu', [10794]], ['MinusPlus', [8723]], ['mlcp', [10971]], ['mldr', [8230]], ['mnplus', [8723]], ['models', [8871]], ['Mopf', [120132]], ['mopf', [120158]], ['mp', [8723]], ['mscr', [120002]], ['Mscr', [8499]], ['mstpos', [8766]], ['Mu', [924]], ['mu', [956]], ['multimap', [8888]], ['mumap', [8888]], ['nabla', [8711]], ['Nacute', [323]], ['nacute', [324]], ['nang', [8736, 8402]], ['nap', [8777]], ['napE', [10864, 824]], ['napid', [8779, 824]], ['napos', [329]], ['napprox', [8777]], ['natural', [9838]], ['naturals', [8469]], ['natur', [9838]], ['nbsp', [160]], ['nbump', [8782, 824]], ['nbumpe', [8783, 824]], ['ncap', [10819]], ['Ncaron', [327]], ['ncaron', [328]], ['Ncedil', [325]], ['ncedil', [326]], ['ncong', [8775]], ['ncongdot', [10861, 824]], ['ncup', [10818]], ['Ncy', [1053]], ['ncy', [1085]], ['ndash', [8211]], ['nearhk', [10532]], ['nearr', [8599]], ['neArr', [8663]], ['nearrow', [8599]], ['ne', [8800]], ['nedot', [8784, 824]], ['NegativeMediumSpace', [8203]], ['NegativeThickSpace', [8203]], ['NegativeThinSpace', [8203]], ['NegativeVeryThinSpace', [8203]], ['nequiv', [8802]], ['nesear', [10536]], ['nesim', [8770, 824]], ['NestedGreaterGreater', [8811]], ['NestedLessLess', [8810]], ['nexist', [8708]], ['nexists', [8708]], ['Nfr', [120081]], ['nfr', [120107]], ['ngE', [8807, 824]], ['nge', [8817]], ['ngeq', [8817]], ['ngeqq', [8807, 824]], ['ngeqslant', [10878, 824]], ['nges', [10878, 824]], ['nGg', [8921, 824]], ['ngsim', [8821]], ['nGt', [8811, 8402]], ['ngt', [8815]], ['ngtr', [8815]], ['nGtv', [8811, 824]], ['nharr', [8622]], ['nhArr', [8654]], ['nhpar', [10994]], ['ni', [8715]], ['nis', [8956]], ['nisd', [8954]], ['niv', [8715]], ['NJcy', [1034]], ['njcy', [1114]], ['nlarr', [8602]], ['nlArr', [8653]], ['nldr', [8229]], ['nlE', [8806, 824]], ['nle', [8816]], ['nleftarrow', [8602]], ['nLeftarrow', [8653]], ['nleftrightarrow', [8622]], ['nLeftrightarrow', [8654]], ['nleq', [8816]], ['nleqq', [8806, 824]], ['nleqslant', [10877, 824]], ['nles', [10877, 824]], ['nless', [8814]], ['nLl', [8920, 824]], ['nlsim', [8820]], ['nLt', [8810, 8402]], ['nlt', [8814]], ['nltri', [8938]], ['nltrie', [8940]], ['nLtv', [8810, 824]], ['nmid', [8740]], ['NoBreak', [8288]], ['NonBreakingSpace', [160]], ['nopf', [120159]], ['Nopf', [8469]], ['Not', [10988]], ['not', [172]], ['NotCongruent', [8802]], ['NotCupCap', [8813]], ['NotDoubleVerticalBar', [8742]], ['NotElement', [8713]], ['NotEqual', [8800]], ['NotEqualTilde', [8770, 824]], ['NotExists', [8708]], ['NotGreater', [8815]], ['NotGreaterEqual', [8817]], ['NotGreaterFullEqual', [8807, 824]], ['NotGreaterGreater', [8811, 824]], ['NotGreaterLess', [8825]], ['NotGreaterSlantEqual', [10878, 824]], ['NotGreaterTilde', [8821]], ['NotHumpDownHump', [8782, 824]], ['NotHumpEqual', [8783, 824]], ['notin', [8713]], ['notindot', [8949, 824]], ['notinE', [8953, 824]], ['notinva', [8713]], ['notinvb', [8951]], ['notinvc', [8950]], ['NotLeftTriangleBar', [10703, 824]], ['NotLeftTriangle', [8938]], ['NotLeftTriangleEqual', [8940]], ['NotLess', [8814]], ['NotLessEqual', [8816]], ['NotLessGreater', [8824]], ['NotLessLess', [8810, 824]], ['NotLessSlantEqual', [10877, 824]], ['NotLessTilde', [8820]], ['NotNestedGreaterGreater', [10914, 824]], ['NotNestedLessLess', [10913, 824]], ['notni', [8716]], ['notniva', [8716]], ['notnivb', [8958]], ['notnivc', [8957]], ['NotPrecedes', [8832]], ['NotPrecedesEqual', [10927, 824]], ['NotPrecedesSlantEqual', [8928]], ['NotReverseElement', [8716]], ['NotRightTriangleBar', [10704, 824]], ['NotRightTriangle', [8939]], ['NotRightTriangleEqual', [8941]], ['NotSquareSubset', [8847, 824]], ['NotSquareSubsetEqual', [8930]], ['NotSquareSuperset', [8848, 824]], ['NotSquareSupersetEqual', [8931]], ['NotSubset', [8834, 8402]], ['NotSubsetEqual', [8840]], ['NotSucceeds', [8833]], ['NotSucceedsEqual', [10928, 824]], ['NotSucceedsSlantEqual', [8929]], ['NotSucceedsTilde', [8831, 824]], ['NotSuperset', [8835, 8402]], ['NotSupersetEqual', [8841]], ['NotTilde', [8769]], ['NotTildeEqual', [8772]], ['NotTildeFullEqual', [8775]], ['NotTildeTilde', [8777]], ['NotVerticalBar', [8740]], ['nparallel', [8742]], ['npar', [8742]], ['nparsl', [11005, 8421]], ['npart', [8706, 824]], ['npolint', [10772]], ['npr', [8832]], ['nprcue', [8928]], ['nprec', [8832]], ['npreceq', [10927, 824]], ['npre', [10927, 824]], ['nrarrc', [10547, 824]], ['nrarr', [8603]], ['nrArr', [8655]], ['nrarrw', [8605, 824]], ['nrightarrow', [8603]], ['nRightarrow', [8655]], ['nrtri', [8939]], ['nrtrie', [8941]], ['nsc', [8833]], ['nsccue', [8929]], ['nsce', [10928, 824]], ['Nscr', [119977]], ['nscr', [120003]], ['nshortmid', [8740]], ['nshortparallel', [8742]], ['nsim', [8769]], ['nsime', [8772]], ['nsimeq', [8772]], ['nsmid', [8740]], ['nspar', [8742]], ['nsqsube', [8930]], ['nsqsupe', [8931]], ['nsub', [8836]], ['nsubE', [10949, 824]], ['nsube', [8840]], ['nsubset', [8834, 8402]], ['nsubseteq', [8840]], ['nsubseteqq', [10949, 824]], ['nsucc', [8833]], ['nsucceq', [10928, 824]], ['nsup', [8837]], ['nsupE', [10950, 824]], ['nsupe', [8841]], ['nsupset', [8835, 8402]], ['nsupseteq', [8841]], ['nsupseteqq', [10950, 824]], ['ntgl', [8825]], ['Ntilde', [209]], ['ntilde', [241]], ['ntlg', [8824]], ['ntriangleleft', [8938]], ['ntrianglelefteq', [8940]], ['ntriangleright', [8939]], ['ntrianglerighteq', [8941]], ['Nu', [925]], ['nu', [957]], ['num', [35]], ['numero', [8470]], ['numsp', [8199]], ['nvap', [8781, 8402]], ['nvdash', [8876]], ['nvDash', [8877]], ['nVdash', [8878]], ['nVDash', [8879]], ['nvge', [8805, 8402]], ['nvgt', [62, 8402]], ['nvHarr', [10500]], ['nvinfin', [10718]], ['nvlArr', [10498]], ['nvle', [8804, 8402]], ['nvlt', [60, 8402]], ['nvltrie', [8884, 8402]], ['nvrArr', [10499]], ['nvrtrie', [8885, 8402]], ['nvsim', [8764, 8402]], ['nwarhk', [10531]], ['nwarr', [8598]], ['nwArr', [8662]], ['nwarrow', [8598]], ['nwnear', [10535]], ['Oacute', [211]], ['oacute', [243]], ['oast', [8859]], ['Ocirc', [212]], ['ocirc', [244]], ['ocir', [8858]], ['Ocy', [1054]], ['ocy', [1086]], ['odash', [8861]], ['Odblac', [336]], ['odblac', [337]], ['odiv', [10808]], ['odot', [8857]], ['odsold', [10684]], ['OElig', [338]], ['oelig', [339]], ['ofcir', [10687]], ['Ofr', [120082]], ['ofr', [120108]], ['ogon', [731]], ['Ograve', [210]], ['ograve', [242]], ['ogt', [10689]], ['ohbar', [10677]], ['ohm', [937]], ['oint', [8750]], ['olarr', [8634]], ['olcir', [10686]], ['olcross', [10683]], ['oline', [8254]], ['olt', [10688]], ['Omacr', [332]], ['omacr', [333]], ['Omega', [937]], ['omega', [969]], ['Omicron', [927]], ['omicron', [959]], ['omid', [10678]], ['ominus', [8854]], ['Oopf', [120134]], ['oopf', [120160]], ['opar', [10679]], ['OpenCurlyDoubleQuote', [8220]], ['OpenCurlyQuote', [8216]], ['operp', [10681]], ['oplus', [8853]], ['orarr', [8635]], ['Or', [10836]], ['or', [8744]], ['ord', [10845]], ['order', [8500]], ['orderof', [8500]], ['ordf', [170]], ['ordm', [186]], ['origof', [8886]], ['oror', [10838]], ['orslope', [10839]], ['orv', [10843]], ['oS', [9416]], ['Oscr', [119978]], ['oscr', [8500]], ['Oslash', [216]], ['oslash', [248]], ['osol', [8856]], ['Otilde', [213]], ['otilde', [245]], ['otimesas', [10806]], ['Otimes', [10807]], ['otimes', [8855]], ['Ouml', [214]], ['ouml', [246]], ['ovbar', [9021]], ['OverBar', [8254]], ['OverBrace', [9182]], ['OverBracket', [9140]], ['OverParenthesis', [9180]], ['para', [182]], ['parallel', [8741]], ['par', [8741]], ['parsim', [10995]], ['parsl', [11005]], ['part', [8706]], ['PartialD', [8706]], ['Pcy', [1055]], ['pcy', [1087]], ['percnt', [37]], ['period', [46]], ['permil', [8240]], ['perp', [8869]], ['pertenk', [8241]], ['Pfr', [120083]], ['pfr', [120109]], ['Phi', [934]], ['phi', [966]], ['phiv', [981]], ['phmmat', [8499]], ['phone', [9742]], ['Pi', [928]], ['pi', [960]], ['pitchfork', [8916]], ['piv', [982]], ['planck', [8463]], ['planckh', [8462]], ['plankv', [8463]], ['plusacir', [10787]], ['plusb', [8862]], ['pluscir', [10786]], ['plus', [43]], ['plusdo', [8724]], ['plusdu', [10789]], ['pluse', [10866]], ['PlusMinus', [177]], ['plusmn', [177]], ['plussim', [10790]], ['plustwo', [10791]], ['pm', [177]], ['Poincareplane', [8460]], ['pointint', [10773]], ['popf', [120161]], ['Popf', [8473]], ['pound', [163]], ['prap', [10935]], ['Pr', [10939]], ['pr', [8826]], ['prcue', [8828]], ['precapprox', [10935]], ['prec', [8826]], ['preccurlyeq', [8828]], ['Precedes', [8826]], ['PrecedesEqual', [10927]], ['PrecedesSlantEqual', [8828]], ['PrecedesTilde', [8830]], ['preceq', [10927]], ['precnapprox', [10937]], ['precneqq', [10933]], ['precnsim', [8936]], ['pre', [10927]], ['prE', [10931]], ['precsim', [8830]], ['prime', [8242]], ['Prime', [8243]], ['primes', [8473]], ['prnap', [10937]], ['prnE', [10933]], ['prnsim', [8936]], ['prod', [8719]], ['Product', [8719]], ['profalar', [9006]], ['profline', [8978]], ['profsurf', [8979]], ['prop', [8733]], ['Proportional', [8733]], ['Proportion', [8759]], ['propto', [8733]], ['prsim', [8830]], ['prurel', [8880]], ['Pscr', [119979]], ['pscr', [120005]], ['Psi', [936]], ['psi', [968]], ['puncsp', [8200]], ['Qfr', [120084]], ['qfr', [120110]], ['qint', [10764]], ['qopf', [120162]], ['Qopf', [8474]], ['qprime', [8279]], ['Qscr', [119980]], ['qscr', [120006]], ['quaternions', [8461]], ['quatint', [10774]], ['quest', [63]], ['questeq', [8799]], ['quot', [34]], ['QUOT', [34]], ['rAarr', [8667]], ['race', [8765, 817]], ['Racute', [340]], ['racute', [341]], ['radic', [8730]], ['raemptyv', [10675]], ['rang', [10217]], ['Rang', [10219]], ['rangd', [10642]], ['range', [10661]], ['rangle', [10217]], ['raquo', [187]], ['rarrap', [10613]], ['rarrb', [8677]], ['rarrbfs', [10528]], ['rarrc', [10547]], ['rarr', [8594]], ['Rarr', [8608]], ['rArr', [8658]], ['rarrfs', [10526]], ['rarrhk', [8618]], ['rarrlp', [8620]], ['rarrpl', [10565]], ['rarrsim', [10612]], ['Rarrtl', [10518]], ['rarrtl', [8611]], ['rarrw', [8605]], ['ratail', [10522]], ['rAtail', [10524]], ['ratio', [8758]], ['rationals', [8474]], ['rbarr', [10509]], ['rBarr', [10511]], ['RBarr', [10512]], ['rbbrk', [10099]], ['rbrace', [125]], ['rbrack', [93]], ['rbrke', [10636]], ['rbrksld', [10638]], ['rbrkslu', [10640]], ['Rcaron', [344]], ['rcaron', [345]], ['Rcedil', [342]], ['rcedil', [343]], ['rceil', [8969]], ['rcub', [125]], ['Rcy', [1056]], ['rcy', [1088]], ['rdca', [10551]], ['rdldhar', [10601]], ['rdquo', [8221]], ['rdquor', [8221]], ['CloseCurlyDoubleQuote', [8221]], ['rdsh', [8627]], ['real', [8476]], ['realine', [8475]], ['realpart', [8476]], ['reals', [8477]], ['Re', [8476]], ['rect', [9645]], ['reg', [174]], ['REG', [174]], ['ReverseElement', [8715]], ['ReverseEquilibrium', [8651]], ['ReverseUpEquilibrium', [10607]], ['rfisht', [10621]], ['rfloor', [8971]], ['rfr', [120111]], ['Rfr', [8476]], ['rHar', [10596]], ['rhard', [8641]], ['rharu', [8640]], ['rharul', [10604]], ['Rho', [929]], ['rho', [961]], ['rhov', [1009]], ['RightAngleBracket', [10217]], ['RightArrowBar', [8677]], ['rightarrow', [8594]], ['RightArrow', [8594]], ['Rightarrow', [8658]], ['RightArrowLeftArrow', [8644]], ['rightarrowtail', [8611]], ['RightCeiling', [8969]], ['RightDoubleBracket', [10215]], ['RightDownTeeVector', [10589]], ['RightDownVectorBar', [10581]], ['RightDownVector', [8642]], ['RightFloor', [8971]], ['rightharpoondown', [8641]], ['rightharpoonup', [8640]], ['rightleftarrows', [8644]], ['rightleftharpoons', [8652]], ['rightrightarrows', [8649]], ['rightsquigarrow', [8605]], ['RightTeeArrow', [8614]], ['RightTee', [8866]], ['RightTeeVector', [10587]], ['rightthreetimes', [8908]], ['RightTriangleBar', [10704]], ['RightTriangle', [8883]], ['RightTriangleEqual', [8885]], ['RightUpDownVector', [10575]], ['RightUpTeeVector', [10588]], ['RightUpVectorBar', [10580]], ['RightUpVector', [8638]], ['RightVectorBar', [10579]], ['RightVector', [8640]], ['ring', [730]], ['risingdotseq', [8787]], ['rlarr', [8644]], ['rlhar', [8652]], ['rlm', [8207]], ['rmoustache', [9137]], ['rmoust', [9137]], ['rnmid', [10990]], ['roang', [10221]], ['roarr', [8702]], ['robrk', [10215]], ['ropar', [10630]], ['ropf', [120163]], ['Ropf', [8477]], ['roplus', [10798]], ['rotimes', [10805]], ['RoundImplies', [10608]], ['rpar', [41]], ['rpargt', [10644]], ['rppolint', [10770]], ['rrarr', [8649]], ['Rrightarrow', [8667]], ['rsaquo', [8250]], ['rscr', [120007]], ['Rscr', [8475]], ['rsh', [8625]], ['Rsh', [8625]], ['rsqb', [93]], ['rsquo', [8217]], ['rsquor', [8217]], ['CloseCurlyQuote', [8217]], ['rthree', [8908]], ['rtimes', [8906]], ['rtri', [9657]], ['rtrie', [8885]], ['rtrif', [9656]], ['rtriltri', [10702]], ['RuleDelayed', [10740]], ['ruluhar', [10600]], ['rx', [8478]], ['Sacute', [346]], ['sacute', [347]], ['sbquo', [8218]], ['scap', [10936]], ['Scaron', [352]], ['scaron', [353]], ['Sc', [10940]], ['sc', [8827]], ['sccue', [8829]], ['sce', [10928]], ['scE', [10932]], ['Scedil', [350]], ['scedil', [351]], ['Scirc', [348]], ['scirc', [349]], ['scnap', [10938]], ['scnE', [10934]], ['scnsim', [8937]], ['scpolint', [10771]], ['scsim', [8831]], ['Scy', [1057]], ['scy', [1089]], ['sdotb', [8865]], ['sdot', [8901]], ['sdote', [10854]], ['searhk', [10533]], ['searr', [8600]], ['seArr', [8664]], ['searrow', [8600]], ['sect', [167]], ['semi', [59]], ['seswar', [10537]], ['setminus', [8726]], ['setmn', [8726]], ['sext', [10038]], ['Sfr', [120086]], ['sfr', [120112]], ['sfrown', [8994]], ['sharp', [9839]], ['SHCHcy', [1065]], ['shchcy', [1097]], ['SHcy', [1064]], ['shcy', [1096]], ['ShortDownArrow', [8595]], ['ShortLeftArrow', [8592]], ['shortmid', [8739]], ['shortparallel', [8741]], ['ShortRightArrow', [8594]], ['ShortUpArrow', [8593]], ['shy', [173]], ['Sigma', [931]], ['sigma', [963]], ['sigmaf', [962]], ['sigmav', [962]], ['sim', [8764]], ['simdot', [10858]], ['sime', [8771]], ['simeq', [8771]], ['simg', [10910]], ['simgE', [10912]], ['siml', [10909]], ['simlE', [10911]], ['simne', [8774]], ['simplus', [10788]], ['simrarr', [10610]], ['slarr', [8592]], ['SmallCircle', [8728]], ['smallsetminus', [8726]], ['smashp', [10803]], ['smeparsl', [10724]], ['smid', [8739]], ['smile', [8995]], ['smt', [10922]], ['smte', [10924]], ['smtes', [10924, 65024]], ['SOFTcy', [1068]], ['softcy', [1100]], ['solbar', [9023]], ['solb', [10692]], ['sol', [47]], ['Sopf', [120138]], ['sopf', [120164]], ['spades', [9824]], ['spadesuit', [9824]], ['spar', [8741]], ['sqcap', [8851]], ['sqcaps', [8851, 65024]], ['sqcup', [8852]], ['sqcups', [8852, 65024]], ['Sqrt', [8730]], ['sqsub', [8847]], ['sqsube', [8849]], ['sqsubset', [8847]], ['sqsubseteq', [8849]], ['sqsup', [8848]], ['sqsupe', [8850]], ['sqsupset', [8848]], ['sqsupseteq', [8850]], ['square', [9633]], ['Square', [9633]], ['SquareIntersection', [8851]], ['SquareSubset', [8847]], ['SquareSubsetEqual', [8849]], ['SquareSuperset', [8848]], ['SquareSupersetEqual', [8850]], ['SquareUnion', [8852]], ['squarf', [9642]], ['squ', [9633]], ['squf', [9642]], ['srarr', [8594]], ['Sscr', [119982]], ['sscr', [120008]], ['ssetmn', [8726]], ['ssmile', [8995]], ['sstarf', [8902]], ['Star', [8902]], ['star', [9734]], ['starf', [9733]], ['straightepsilon', [1013]], ['straightphi', [981]], ['strns', [175]], ['sub', [8834]], ['Sub', [8912]], ['subdot', [10941]], ['subE', [10949]], ['sube', [8838]], ['subedot', [10947]], ['submult', [10945]], ['subnE', [10955]], ['subne', [8842]], ['subplus', [10943]], ['subrarr', [10617]], ['subset', [8834]], ['Subset', [8912]], ['subseteq', [8838]], ['subseteqq', [10949]], ['SubsetEqual', [8838]], ['subsetneq', [8842]], ['subsetneqq', [10955]], ['subsim', [10951]], ['subsub', [10965]], ['subsup', [10963]], ['succapprox', [10936]], ['succ', [8827]], ['succcurlyeq', [8829]], ['Succeeds', [8827]], ['SucceedsEqual', [10928]], ['SucceedsSlantEqual', [8829]], ['SucceedsTilde', [8831]], ['succeq', [10928]], ['succnapprox', [10938]], ['succneqq', [10934]], ['succnsim', [8937]], ['succsim', [8831]], ['SuchThat', [8715]], ['sum', [8721]], ['Sum', [8721]], ['sung', [9834]], ['sup1', [185]], ['sup2', [178]], ['sup3', [179]], ['sup', [8835]], ['Sup', [8913]], ['supdot', [10942]], ['supdsub', [10968]], ['supE', [10950]], ['supe', [8839]], ['supedot', [10948]], ['Superset', [8835]], ['SupersetEqual', [8839]], ['suphsol', [10185]], ['suphsub', [10967]], ['suplarr', [10619]], ['supmult', [10946]], ['supnE', [10956]], ['supne', [8843]], ['supplus', [10944]], ['supset', [8835]], ['Supset', [8913]], ['supseteq', [8839]], ['supseteqq', [10950]], ['supsetneq', [8843]], ['supsetneqq', [10956]], ['supsim', [10952]], ['supsub', [10964]], ['supsup', [10966]], ['swarhk', [10534]], ['swarr', [8601]], ['swArr', [8665]], ['swarrow', [8601]], ['swnwar', [10538]], ['szlig', [223]], ['Tab', [9]], ['target', [8982]], ['Tau', [932]], ['tau', [964]], ['tbrk', [9140]], ['Tcaron', [356]], ['tcaron', [357]], ['Tcedil', [354]], ['tcedil', [355]], ['Tcy', [1058]], ['tcy', [1090]], ['tdot', [8411]], ['telrec', [8981]], ['Tfr', [120087]], ['tfr', [120113]], ['there4', [8756]], ['therefore', [8756]], ['Therefore', [8756]], ['Theta', [920]], ['theta', [952]], ['thetasym', [977]], ['thetav', [977]], ['thickapprox', [8776]], ['thicksim', [8764]], ['ThickSpace', [8287, 8202]], ['ThinSpace', [8201]], ['thinsp', [8201]], ['thkap', [8776]], ['thksim', [8764]], ['THORN', [222]], ['thorn', [254]], ['tilde', [732]], ['Tilde', [8764]], ['TildeEqual', [8771]], ['TildeFullEqual', [8773]], ['TildeTilde', [8776]], ['timesbar', [10801]], ['timesb', [8864]], ['times', [215]], ['timesd', [10800]], ['tint', [8749]], ['toea', [10536]], ['topbot', [9014]], ['topcir', [10993]], ['top', [8868]], ['Topf', [120139]], ['topf', [120165]], ['topfork', [10970]], ['tosa', [10537]], ['tprime', [8244]], ['trade', [8482]], ['TRADE', [8482]], ['triangle', [9653]], ['triangledown', [9663]], ['triangleleft', [9667]], ['trianglelefteq', [8884]], ['triangleq', [8796]], ['triangleright', [9657]], ['trianglerighteq', [8885]], ['tridot', [9708]], ['trie', [8796]], ['triminus', [10810]], ['TripleDot', [8411]], ['triplus', [10809]], ['trisb', [10701]], ['tritime', [10811]], ['trpezium', [9186]], ['Tscr', [119983]], ['tscr', [120009]], ['TScy', [1062]], ['tscy', [1094]], ['TSHcy', [1035]], ['tshcy', [1115]], ['Tstrok', [358]], ['tstrok', [359]], ['twixt', [8812]], ['twoheadleftarrow', [8606]], ['twoheadrightarrow', [8608]], ['Uacute', [218]], ['uacute', [250]], ['uarr', [8593]], ['Uarr', [8607]], ['uArr', [8657]], ['Uarrocir', [10569]], ['Ubrcy', [1038]], ['ubrcy', [1118]], ['Ubreve', [364]], ['ubreve', [365]], ['Ucirc', [219]], ['ucirc', [251]], ['Ucy', [1059]], ['ucy', [1091]], ['udarr', [8645]], ['Udblac', [368]], ['udblac', [369]], ['udhar', [10606]], ['ufisht', [10622]], ['Ufr', [120088]], ['ufr', [120114]], ['Ugrave', [217]], ['ugrave', [249]], ['uHar', [10595]], ['uharl', [8639]], ['uharr', [8638]], ['uhblk', [9600]], ['ulcorn', [8988]], ['ulcorner', [8988]], ['ulcrop', [8975]], ['ultri', [9720]], ['Umacr', [362]], ['umacr', [363]], ['uml', [168]], ['UnderBar', [95]], ['UnderBrace', [9183]], ['UnderBracket', [9141]], ['UnderParenthesis', [9181]], ['Union', [8899]], ['UnionPlus', [8846]], ['Uogon', [370]], ['uogon', [371]], ['Uopf', [120140]], ['uopf', [120166]], ['UpArrowBar', [10514]], ['uparrow', [8593]], ['UpArrow', [8593]], ['Uparrow', [8657]], ['UpArrowDownArrow', [8645]], ['updownarrow', [8597]], ['UpDownArrow', [8597]], ['Updownarrow', [8661]], ['UpEquilibrium', [10606]], ['upharpoonleft', [8639]], ['upharpoonright', [8638]], ['uplus', [8846]], ['UpperLeftArrow', [8598]], ['UpperRightArrow', [8599]], ['upsi', [965]], ['Upsi', [978]], ['upsih', [978]], ['Upsilon', [933]], ['upsilon', [965]], ['UpTeeArrow', [8613]], ['UpTee', [8869]], ['upuparrows', [8648]], ['urcorn', [8989]], ['urcorner', [8989]], ['urcrop', [8974]], ['Uring', [366]], ['uring', [367]], ['urtri', [9721]], ['Uscr', [119984]], ['uscr', [120010]], ['utdot', [8944]], ['Utilde', [360]], ['utilde', [361]], ['utri', [9653]], ['utrif', [9652]], ['uuarr', [8648]], ['Uuml', [220]], ['uuml', [252]], ['uwangle', [10663]], ['vangrt', [10652]], ['varepsilon', [1013]], ['varkappa', [1008]], ['varnothing', [8709]], ['varphi', [981]], ['varpi', [982]], ['varpropto', [8733]], ['varr', [8597]], ['vArr', [8661]], ['varrho', [1009]], ['varsigma', [962]], ['varsubsetneq', [8842, 65024]], ['varsubsetneqq', [10955, 65024]], ['varsupsetneq', [8843, 65024]], ['varsupsetneqq', [10956, 65024]], ['vartheta', [977]], ['vartriangleleft', [8882]], ['vartriangleright', [8883]], ['vBar', [10984]], ['Vbar', [10987]], ['vBarv', [10985]], ['Vcy', [1042]], ['vcy', [1074]], ['vdash', [8866]], ['vDash', [8872]], ['Vdash', [8873]], ['VDash', [8875]], ['Vdashl', [10982]], ['veebar', [8891]], ['vee', [8744]], ['Vee', [8897]], ['veeeq', [8794]], ['vellip', [8942]], ['verbar', [124]], ['Verbar', [8214]], ['vert', [124]], ['Vert', [8214]], ['VerticalBar', [8739]], ['VerticalLine', [124]], ['VerticalSeparator', [10072]], ['VerticalTilde', [8768]], ['VeryThinSpace', [8202]], ['Vfr', [120089]], ['vfr', [120115]], ['vltri', [8882]], ['vnsub', [8834, 8402]], ['vnsup', [8835, 8402]], ['Vopf', [120141]], ['vopf', [120167]], ['vprop', [8733]], ['vrtri', [8883]], ['Vscr', [119985]], ['vscr', [120011]], ['vsubnE', [10955, 65024]], ['vsubne', [8842, 65024]], ['vsupnE', [10956, 65024]], ['vsupne', [8843, 65024]], ['Vvdash', [8874]], ['vzigzag', [10650]], ['Wcirc', [372]], ['wcirc', [373]], ['wedbar', [10847]], ['wedge', [8743]], ['Wedge', [8896]], ['wedgeq', [8793]], ['weierp', [8472]], ['Wfr', [120090]], ['wfr', [120116]], ['Wopf', [120142]], ['wopf', [120168]], ['wp', [8472]], ['wr', [8768]], ['wreath', [8768]], ['Wscr', [119986]], ['wscr', [120012]], ['xcap', [8898]], ['xcirc', [9711]], ['xcup', [8899]], ['xdtri', [9661]], ['Xfr', [120091]], ['xfr', [120117]], ['xharr', [10231]], ['xhArr', [10234]], ['Xi', [926]], ['xi', [958]], ['xlarr', [10229]], ['xlArr', [10232]], ['xmap', [10236]], ['xnis', [8955]], ['xodot', [10752]], ['Xopf', [120143]], ['xopf', [120169]], ['xoplus', [10753]], ['xotime', [10754]], ['xrarr', [10230]], ['xrArr', [10233]], ['Xscr', [119987]], ['xscr', [120013]], ['xsqcup', [10758]], ['xuplus', [10756]], ['xutri', [9651]], ['xvee', [8897]], ['xwedge', [8896]], ['Yacute', [221]], ['yacute', [253]], ['YAcy', [1071]], ['yacy', [1103]], ['Ycirc', [374]], ['ycirc', [375]], ['Ycy', [1067]], ['ycy', [1099]], ['yen', [165]], ['Yfr', [120092]], ['yfr', [120118]], ['YIcy', [1031]], ['yicy', [1111]], ['Yopf', [120144]], ['yopf', [120170]], ['Yscr', [119988]], ['yscr', [120014]], ['YUcy', [1070]], ['yucy', [1102]], ['yuml', [255]], ['Yuml', [376]], ['Zacute', [377]], ['zacute', [378]], ['Zcaron', [381]], ['zcaron', [382]], ['Zcy', [1047]], ['zcy', [1079]], ['Zdot', [379]], ['zdot', [380]], ['zeetrf', [8488]], ['ZeroWidthSpace', [8203]], ['Zeta', [918]], ['zeta', [950]], ['zfr', [120119]], ['Zfr', [8488]], ['ZHcy', [1046]], ['zhcy', [1078]], ['zigrarr', [8669]], ['zopf', [120171]], ['Zopf', [8484]], ['Zscr', [119989]], ['zscr', [120015]], ['zwj', [8205]], ['zwnj', [8204]]];
-
-var alphaIndex = {};
-var charIndex = {};
-
-createIndexes(alphaIndex, charIndex);
-
-/**
- * @constructor
- */
-function Html5Entities() {}
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html5Entities.prototype.decode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    return str.replace(/&(#?[\w\d]+);?/g, function(s, entity) {
-        var chr;
-        if (entity.charAt(0) === "#") {
-            var code = entity.charAt(1) === 'x' ?
-                parseInt(entity.substr(2).toLowerCase(), 16) :
-                parseInt(entity.substr(1));
-
-            if (!(isNaN(code) || code < -32768 || code > 65535)) {
-                chr = String.fromCharCode(code);
-            }
-        } else {
-            chr = alphaIndex[entity];
-        }
-        return chr || s;
-    });
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- Html5Entities.decode = function(str) {
-    return new Html5Entities().decode(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html5Entities.prototype.encode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var charInfo = charIndex[str.charCodeAt(i)];
-        if (charInfo) {
-            var alpha = charInfo[str.charCodeAt(i + 1)];
-            if (alpha) {
-                i++;
-            } else {
-                alpha = charInfo[''];
-            }
-            if (alpha) {
-                result += "&" + alpha + ";";
-                i++;
-                continue;
-            }
-        }
-        result += str.charAt(i);
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- Html5Entities.encode = function(str) {
-    return new Html5Entities().encode(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html5Entities.prototype.encodeNonUTF = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var c = str.charCodeAt(i);
-        var charInfo = charIndex[c];
-        if (charInfo) {
-            var alpha = charInfo[str.charCodeAt(i + 1)];
-            if (alpha) {
-                i++;
-            } else {
-                alpha = charInfo[''];
-            }
-            if (alpha) {
-                result += "&" + alpha + ";";
-                i++;
-                continue;
-            }
-        }
-        if (c < 32 || c > 126) {
-            result += '&#' + c + ';';
-        } else {
-            result += str.charAt(i);
-        }
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- Html5Entities.encodeNonUTF = function(str) {
-    return new Html5Entities().encodeNonUTF(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-Html5Entities.prototype.encodeNonASCII = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var c = str.charCodeAt(i);
-        if (c <= 255) {
-            result += str[i++];
-            continue;
-        }
-        result += '&#' + c + ';';
-        i++
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- Html5Entities.encodeNonASCII = function(str) {
-    return new Html5Entities().encodeNonASCII(str);
- };
-
-/**
- * @param {Object} alphaIndex Passed by reference.
- * @param {Object} charIndex Passed by reference.
- */
-function createIndexes(alphaIndex, charIndex) {
-    var i = ENTITIES.length;
-    var _results = [];
-    while (i--) {
-        var e = ENTITIES[i];
-        var alpha = e[0];
-        var chars = e[1];
-        var chr = chars[0];
-        var addChar = (chr < 32 || chr > 126) || chr === 62 || chr === 60 || chr === 38 || chr === 34 || chr === 39;
-        var charInfo;
-        if (addChar) {
-            charInfo = charIndex[chr] = charIndex[chr] || {};
-        }
-        if (chars[1]) {
-            var chr2 = chars[1];
-            alphaIndex[alpha] = String.fromCharCode(chr) + String.fromCharCode(chr2);
-            _results.push(addChar && (charInfo[chr2] = alpha));
-        } else {
-            alphaIndex[alpha] = String.fromCharCode(chr);
-            _results.push(addChar && (charInfo[''] = alpha));
-        }
-    }
-}
-
-module.exports = Html5Entities;
-
-},{}],50:[function(require,module,exports){
-var ALPHA_INDEX = {
-    '&lt': '<',
-    '&gt': '>',
-    '&quot': '"',
-    '&apos': '\'',
-    '&amp': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&apos;': '\'',
-    '&amp;': '&'
-};
-
-var CHAR_INDEX = {
-    60: 'lt',
-    62: 'gt',
-    34: 'quot',
-    39: 'apos',
-    38: 'amp'
-};
-
-var CHAR_S_INDEX = {
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    '\'': '&apos;',
-    '&': '&amp;'
-};
-
-/**
- * @constructor
- */
-function XmlEntities() {}
-
-/**
- * @param {String} str
- * @returns {String}
- */
-XmlEntities.prototype.encode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    return str.replace(/<|>|"|'|&/g, function(s) {
-        return CHAR_S_INDEX[s];
-    });
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- XmlEntities.encode = function(str) {
-    return new XmlEntities().encode(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-XmlEntities.prototype.decode = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    return str.replace(/&#?[0-9a-zA-Z]+;?/g, function(s) {
-        if (s.charAt(1) === '#') {
-            var code = s.charAt(2).toLowerCase() === 'x' ?
-                parseInt(s.substr(3), 16) :
-                parseInt(s.substr(2));
-
-            if (isNaN(code) || code < -32768 || code > 65535) {
-                return '';
-            }
-            return String.fromCharCode(code);
-        }
-        return ALPHA_INDEX[s] || s;
-    });
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- XmlEntities.decode = function(str) {
-    return new XmlEntities().decode(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-XmlEntities.prototype.encodeNonUTF = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLength = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLength) {
-        var c = str.charCodeAt(i);
-        var alpha = CHAR_INDEX[c];
-        if (alpha) {
-            result += "&" + alpha + ";";
-            i++;
-            continue;
-        }
-        if (c < 32 || c > 126) {
-            result += '&#' + c + ';';
-        } else {
-            result += str.charAt(i);
-        }
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- XmlEntities.encodeNonUTF = function(str) {
-    return new XmlEntities().encodeNonUTF(str);
- };
-
-/**
- * @param {String} str
- * @returns {String}
- */
-XmlEntities.prototype.encodeNonASCII = function(str) {
-    if (!str || !str.length) {
-        return '';
-    }
-    var strLenght = str.length;
-    var result = '';
-    var i = 0;
-    while (i < strLenght) {
-        var c = str.charCodeAt(i);
-        if (c <= 255) {
-            result += str[i++];
-            continue;
-        }
-        result += '&#' + c + ';';
-        i++;
-    }
-    return result;
-};
-
-/**
- * @param {String} str
- * @returns {String}
- */
- XmlEntities.encodeNonASCII = function(str) {
-    return new XmlEntities().encodeNonASCII(str);
- };
-
-module.exports = XmlEntities;
-
-},{}],51:[function(require,module,exports){
-const PassThrough = require('stream').PassThrough;
-const urlResolve  = require('url').resolve;
-const miniget     = require('miniget');
-const m3u8        = require('./m3u8-parser');
-const Queue       = require('./queue');
-
-
-/**
- * @param {String} playlistURL
- * @param {Object} options
- * @return {stream.Readable}
- */
-module.exports = (playlistURL, options) => {
-  var stream = new PassThrough();
-  options = options || {};
-  var chunkReadahead = options.chunkReadahead || 3;
-  var refreshInterval = options.refreshInterval || 600000; // 10 minutes
-  var requestOptions = options.requestOptions;
-
-  var latestSegment;
-  var streamQueue = new Queue((segment, callback) => {
-    latestSegment = segment;
-    segment.pipe(stream, { end: false });
-    segment.on('end', callback);
-  }, { concurrency: 1 });
-
-  var requestQueue = new Queue((segmentURL, callback) => {
-    var segment = miniget(urlResolve(playlistURL, segmentURL), requestOptions);
-    segment.on('error', callback);
-    streamQueue.push(segment, callback);
-  }, {
-    concurrency: chunkReadahead,
-    unique: (segmentURL) => segmentURL,
-  });
-
-  function onError(err) {
-    stream.emit('error', err);
-    // Stop on any error.
-    stream.end();
-  }
-
-  // When to look for items again.
-  var refreshThreshold;
-  var fetchingPlaylist = false;
-  var destroyed = false;
-  var ended = false;
-  function onQueuedEnd(err) {
-    if (err) {
-      onError(err);
-    } else if (!fetchingPlaylist && !destroyed && !ended &&
-      requestQueue.tasks.length + requestQueue.active === refreshThreshold) {
-      refreshPlaylist();
-    } else if (ended && !requestQueue.tasks.length && !requestQueue.active) {
-      stream.end();
-    }
-  }
-
-  var tid;
-  function refreshPlaylist() {
-    clearTimeout(tid);
-    fetchingPlaylist = true;
-    var req = miniget(playlistURL, requestOptions);
-    req.on('error', onError);
-    var parser = req.pipe(new m3u8());
-    parser.on('tag', (tagName) => {
-      if (tagName === 'EXT-X-ENDLIST') {
-        ended = true;
-        req.unpipe();
-        clearTimeout(tid);
-      }
-    });
-    var totalItems = 0;
-    parser.on('item', (item) => {
-      totalItems++;
-      requestQueue.push(item, onQueuedEnd);
-    });
-    parser.on('end', () => {
-      refreshThreshold = Math.ceil(totalItems * 0.01);
-      tid = setTimeout(refreshPlaylist, refreshInterval);
-      fetchingPlaylist = false;
-    });
-  }
-  refreshPlaylist();
-
-  stream.end = () => {
-    destroyed = true;
-    streamQueue.die();
-    requestQueue.die();
-    clearTimeout(tid);
-    if (latestSegment) { latestSegment.unpipe(); }
-    PassThrough.prototype.end.call(stream);
-  };
-
-  return stream;
-};
-
-},{"./m3u8-parser":52,"./queue":53,"miniget":54,"stream":32,"url":39}],52:[function(require,module,exports){
-'use strict';
-
-const Writable = require('stream').Writable;
-
-
-/**
- * A very simple m3u8 playlist file parser that detects tags and segments.
- *
- * @extends WritableStream
- * @constructor
- */
-module.exports = class m3u8parser extends Writable {
-  constructor() {
-    super({ decodeStrings: false });
-    this._lastLine = '';
-    this.on('finish', () => {
-      this._parseLine(this._lastLine);
-      this.emit('end');
-    });
-  }
-
-  _parseLine(line) {
-    var tag = line.match(/^#(EXT[A-Z0-9-]+)(?::(.*))?/);
-    if (tag) {
-      // This is a tag.
-      this.emit('tag', tag[1], tag[2] || null);
-
-    } else if (!/^#/.test(line) && line.trim()) {
-      // This is a segment
-      this.emit('item', line.trim());
-    }
-  }
-
-  _write(chunk, encoding, callback) {
-    var lines = chunk.toString('utf8').split('\n');
-    if (this._lastLine) { lines[0] = this._lastLine + lines[0]; }
-    lines.forEach((line, i) => {
-      if (i < lines.length - 1) {
-        this._parseLine(line);
-      } else {
-        // Save the last line in case it has been broken up.
-        this._lastLine = line;
-      }
-    });
-    callback();
-  }
-};
-
-},{"stream":32}],53:[function(require,module,exports){
-'use strict';
-
-module.exports = class Queue {
-  /**
-   * A really simple queue with concurrency that optionally
-   * only adds unique tasks.
-   *
-   * @param {Function(Object, Function)} worker
-   * @param {Object} options
-   */
-  constructor(worker, options) {
-    this._worker = worker;
-    options = options || {};
-    this._concurrency = options.concurrency || 1;
-    this._unique = options.unique;
-    this._tasksMap = {};
-    this.tasks = [];
-    this.active = 0;
-  }
-
-
-  /**
-   * Push a task to the queue.
-   *
-   * @param {Object} item
-   * @param {Function(Error)} callback
-   */
-  push(item) {
-    if (this._unique) {
-      var key = this._unique(item);
-      if (this._tasksMap[key] === true) { return; }
-      this._tasksMap[key] = true;
-    }
-    this.tasks.push(arguments);
-    this._next();
-  }
-
-
-  /**
-   * Process next job in queue.
-   */
-  _next() {
-    if (this.active >= this._concurrency || !this.tasks.length) { return; }
-    var task = this.tasks.shift();
-    var item = task[0];
-    var callback = task[1];
-    var callbackCalled = false;
-    this.active++;
-    this._worker(item, (err) => {
-      if (callbackCalled) { return; }
-      if (this._unique) { delete this._tasksMap[this._unique(item)]; }
-      this.active--;
-      callbackCalled = true;
-      if (callback) { callback(err); }
-      this._next();
-    });
-  }
-
-
-  /**
-   * Stops processing queued jobs.
-   */
-  die() {
-    this.tasks = [];
-    this._tasksMap = {};
-  }
-};
-
-},{}],54:[function(require,module,exports){
-(function (process){
-const http        = require('http');
-const https       = require('https');
-const urlParse    = require('url').parse;
-const PassThrough = require('stream').PassThrough;
-
-
-const httpLibs = { 'http:': http, 'https:': https };
-const redirectCodes = { 301: true, 302: true, 303: true, 307: true };
-
-/**
-* @param {String} url
-* @param {!Object} options
-* @param {!Function(Error, http.IncomingMessage, String)} callback
-* @return {stream.Readable}
-*/
-module.exports = (url, options, callback) => {
-  if (typeof options === 'function') {
-    callback = options;
-    options = {};
-  } else if (!options) {
-    options = {};
-  }
-  var maxRedirects = options.maxRedirects || 3;
-  var stream = new PassThrough({ highWaterMark: options.highWaterMark });
-  var req, aborted = false;
-
-  function onError(err) {
-    if (callback) {
-      callback(err);
-    } else {
-      stream.emit('error', err);
-    }
-  }
-
-  function doDownload(url, tryCount) {
-    var parsed = urlParse(url);
-    var httpLib = httpLibs[parsed.protocol];
-    if (!httpLib) {
-      setImmediate(() => {
-        onError(new Error('Invalid URL: ' + url));
-      });
-      return stream;
-    }
-
-    for (var key in options) {
-      parsed[key] = options[key];
-    }
-    delete parsed.maxRedirects;
-    delete parsed.highWaterMark;
-    delete parsed.transform;
-    if (options.transform) {
-      var transform = options.transform;
-      parsed = transform(parsed);
-    }
-
-    req = httpLib.get(parsed, (res) => {
-      if (redirectCodes[res.statusCode] === true) {
-        if (tryCount >= maxRedirects) {
-          onError(new Error('Too many redirects'));
-        } else {
-          doDownload(res.headers.location, tryCount + 1);
-        }
-        return;
-      } else if (res.statusCode < 200 || 300 <= res.statusCode) {
-        onError(new Error('Status code: ' + res.statusCode));
-        return;
-      }
-      if (callback) {
-        var body = '';
-        res.setEncoding('utf8');
-        res.on('data', (chunk) => {
-          body += chunk;
-        });
-        res.on('end', () => {
-          callback(null, res, body);
-        });
-      } else {
-        stream.emit('response', res);
-        res.on('error', onError);
-        res.pipe(stream);
-      }
-    });
-    req.on('error', onError);
-    if (aborted) { req.abort(); }
-    stream.emit('request', req);
-  }
-
-  stream.abort = () => {
-    aborted = true;
-    stream.emit('abort');
-    if (req) { req.abort(); }
-  };
-
-  process.nextTick(() => { doDownload(url, 1); });
-  return callback ? null : stream;
-};
-
-}).call(this,require('_process'))
-},{"_process":13,"http":33,"https":7,"stream":32,"url":39}],55:[function(require,module,exports){
-(function (Buffer){
-;(function (sax) { // wrapper for non-node envs
-  sax.parser = function (strict, opt) { return new SAXParser(strict, opt) }
-  sax.SAXParser = SAXParser
-  sax.SAXStream = SAXStream
-  sax.createStream = createStream
-
-  // When we pass the MAX_BUFFER_LENGTH position, start checking for buffer overruns.
-  // When we check, schedule the next check for MAX_BUFFER_LENGTH - (max(buffer lengths)),
-  // since that's the earliest that a buffer overrun could occur.  This way, checks are
-  // as rare as required, but as often as necessary to ensure never crossing this bound.
-  // Furthermore, buffers are only tested at most once per write(), so passing a very
-  // large string into write() might have undesirable effects, but this is manageable by
-  // the caller, so it is assumed to be safe.  Thus, a call to write() may, in the extreme
-  // edge case, result in creating at most one complete copy of the string passed in.
-  // Set to Infinity to have unlimited buffers.
-  sax.MAX_BUFFER_LENGTH = 64 * 1024
-
-  var buffers = [
-    'comment', 'sgmlDecl', 'textNode', 'tagName', 'doctype',
-    'procInstName', 'procInstBody', 'entity', 'attribName',
-    'attribValue', 'cdata', 'script'
-  ]
-
-  sax.EVENTS = [
-    'text',
-    'processinginstruction',
-    'sgmldeclaration',
-    'doctype',
-    'comment',
-    'opentagstart',
-    'attribute',
-    'opentag',
-    'closetag',
-    'opencdata',
-    'cdata',
-    'closecdata',
-    'error',
-    'end',
-    'ready',
-    'script',
-    'opennamespace',
-    'closenamespace'
-  ]
-
-  function SAXParser (strict, opt) {
-    if (!(this instanceof SAXParser)) {
-      return new SAXParser(strict, opt)
-    }
-
-    var parser = this
-    clearBuffers(parser)
-    parser.q = parser.c = ''
-    parser.bufferCheckPosition = sax.MAX_BUFFER_LENGTH
-    parser.opt = opt || {}
-    parser.opt.lowercase = parser.opt.lowercase || parser.opt.lowercasetags
-    parser.looseCase = parser.opt.lowercase ? 'toLowerCase' : 'toUpperCase'
-    parser.tags = []
-    parser.closed = parser.closedRoot = parser.sawRoot = false
-    parser.tag = parser.error = null
-    parser.strict = !!strict
-    parser.noscript = !!(strict || parser.opt.noscript)
-    parser.state = S.BEGIN
-    parser.strictEntities = parser.opt.strictEntities
-    parser.ENTITIES = parser.strictEntities ? Object.create(sax.XML_ENTITIES) : Object.create(sax.ENTITIES)
-    parser.attribList = []
-
-    // namespaces form a prototype chain.
-    // it always points at the current tag,
-    // which protos to its parent tag.
-    if (parser.opt.xmlns) {
-      parser.ns = Object.create(rootNS)
-    }
-
-    // mostly just for error reporting
-    parser.trackPosition = parser.opt.position !== false
-    if (parser.trackPosition) {
-      parser.position = parser.line = parser.column = 0
-    }
-    emit(parser, 'onready')
-  }
-
-  if (!Object.create) {
-    Object.create = function (o) {
-      function F () {}
-      F.prototype = o
-      var newf = new F()
-      return newf
-    }
-  }
-
-  if (!Object.keys) {
-    Object.keys = function (o) {
-      var a = []
-      for (var i in o) if (o.hasOwnProperty(i)) a.push(i)
-      return a
-    }
-  }
-
-  function checkBufferLength (parser) {
-    var maxAllowed = Math.max(sax.MAX_BUFFER_LENGTH, 10)
-    var maxActual = 0
-    for (var i = 0, l = buffers.length; i < l; i++) {
-      var len = parser[buffers[i]].length
-      if (len > maxAllowed) {
-        // Text/cdata nodes can get big, and since they're buffered,
-        // we can get here under normal conditions.
-        // Avoid issues by emitting the text node now,
-        // so at least it won't get any bigger.
-        switch (buffers[i]) {
-          case 'textNode':
-            closeText(parser)
-            break
-
-          case 'cdata':
-            emitNode(parser, 'oncdata', parser.cdata)
-            parser.cdata = ''
-            break
-
-          case 'script':
-            emitNode(parser, 'onscript', parser.script)
-            parser.script = ''
-            break
-
-          default:
-            error(parser, 'Max buffer length exceeded: ' + buffers[i])
-        }
-      }
-      maxActual = Math.max(maxActual, len)
-    }
-    // schedule the next check for the earliest possible buffer overrun.
-    var m = sax.MAX_BUFFER_LENGTH - maxActual
-    parser.bufferCheckPosition = m + parser.position
-  }
-
-  function clearBuffers (parser) {
-    for (var i = 0, l = buffers.length; i < l; i++) {
-      parser[buffers[i]] = ''
-    }
-  }
-
-  function flushBuffers (parser) {
-    closeText(parser)
-    if (parser.cdata !== '') {
-      emitNode(parser, 'oncdata', parser.cdata)
-      parser.cdata = ''
-    }
-    if (parser.script !== '') {
-      emitNode(parser, 'onscript', parser.script)
-      parser.script = ''
-    }
-  }
-
-  SAXParser.prototype = {
-    end: function () { end(this) },
-    write: write,
-    resume: function () { this.error = null; return this },
-    close: function () { return this.write(null) },
-    flush: function () { flushBuffers(this) }
-  }
-
-  var Stream
-  try {
-    Stream = require('stream').Stream
-  } catch (ex) {
-    Stream = function () {}
-  }
-
-  var streamWraps = sax.EVENTS.filter(function (ev) {
-    return ev !== 'error' && ev !== 'end'
-  })
-
-  function createStream (strict, opt) {
-    return new SAXStream(strict, opt)
-  }
-
-  function SAXStream (strict, opt) {
-    if (!(this instanceof SAXStream)) {
-      return new SAXStream(strict, opt)
-    }
-
-    Stream.apply(this)
-
-    this._parser = new SAXParser(strict, opt)
-    this.writable = true
-    this.readable = true
-
-    var me = this
-
-    this._parser.onend = function () {
-      me.emit('end')
-    }
-
-    this._parser.onerror = function (er) {
-      me.emit('error', er)
-
-      // if didn't throw, then means error was handled.
-      // go ahead and clear error, so we can write again.
-      me._parser.error = null
-    }
-
-    this._decoder = null
-
-    streamWraps.forEach(function (ev) {
-      Object.defineProperty(me, 'on' + ev, {
-        get: function () {
-          return me._parser['on' + ev]
-        },
-        set: function (h) {
-          if (!h) {
-            me.removeAllListeners(ev)
-            me._parser['on' + ev] = h
-            return h
-          }
-          me.on(ev, h)
-        },
-        enumerable: true,
-        configurable: false
-      })
-    })
-  }
-
-  SAXStream.prototype = Object.create(Stream.prototype, {
-    constructor: {
-      value: SAXStream
-    }
-  })
-
-  SAXStream.prototype.write = function (data) {
-    if (typeof Buffer === 'function' &&
-      typeof Buffer.isBuffer === 'function' &&
-      Buffer.isBuffer(data)) {
-      if (!this._decoder) {
-        var SD = require('string_decoder').StringDecoder
-        this._decoder = new SD('utf8')
-      }
-      data = this._decoder.write(data)
-    }
-
-    this._parser.write(data.toString())
-    this.emit('data', data)
-    return true
-  }
-
-  SAXStream.prototype.end = function (chunk) {
-    if (chunk && chunk.length) {
-      this.write(chunk)
-    }
-    this._parser.end()
-    return true
-  }
-
-  SAXStream.prototype.on = function (ev, handler) {
-    var me = this
-    if (!me._parser['on' + ev] && streamWraps.indexOf(ev) !== -1) {
-      me._parser['on' + ev] = function () {
-        var args = arguments.length === 1 ? [arguments[0]] : Array.apply(null, arguments)
-        args.splice(0, 0, ev)
-        me.emit.apply(me, args)
-      }
-    }
-
-    return Stream.prototype.on.call(me, ev, handler)
-  }
-
-  // this really needs to be replaced with character classes.
-  // XML allows all manner of ridiculous numbers and digits.
-  var CDATA = '[CDATA['
-  var DOCTYPE = 'DOCTYPE'
-  var XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace'
-  var XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
-  var rootNS = { xml: XML_NAMESPACE, xmlns: XMLNS_NAMESPACE }
-
-  // http://www.w3.org/TR/REC-xml/#NT-NameStartChar
-  // This implementation works on strings, a single character at a time
-  // as such, it cannot ever support astral-plane characters (10000-EFFFF)
-  // without a significant breaking change to either this  parser, or the
-  // JavaScript language.  Implementation of an emoji-capable xml parser
-  // is left as an exercise for the reader.
-  var nameStart = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
-
-  var nameBody = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
-
-  var entityStart = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
-  var entityBody = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
-
-  function isWhitespace (c) {
-    return c === ' ' || c === '\n' || c === '\r' || c === '\t'
-  }
-
-  function isQuote (c) {
-    return c === '"' || c === '\''
-  }
-
-  function isAttribEnd (c) {
-    return c === '>' || isWhitespace(c)
-  }
-
-  function isMatch (regex, c) {
-    return regex.test(c)
-  }
-
-  function notMatch (regex, c) {
-    return !isMatch(regex, c)
-  }
-
-  var S = 0
-  sax.STATE = {
-    BEGIN: S++, // leading byte order mark or whitespace
-    BEGIN_WHITESPACE: S++, // leading whitespace
-    TEXT: S++, // general stuff
-    TEXT_ENTITY: S++, // &amp and such.
-    OPEN_WAKA: S++, // <
-    SGML_DECL: S++, // <!BLARG
-    SGML_DECL_QUOTED: S++, // <!BLARG foo "bar
-    DOCTYPE: S++, // <!DOCTYPE
-    DOCTYPE_QUOTED: S++, // <!DOCTYPE "//blah
-    DOCTYPE_DTD: S++, // <!DOCTYPE "//blah" [ ...
-    DOCTYPE_DTD_QUOTED: S++, // <!DOCTYPE "//blah" [ "foo
-    COMMENT_STARTING: S++, // <!-
-    COMMENT: S++, // <!--
-    COMMENT_ENDING: S++, // <!-- blah -
-    COMMENT_ENDED: S++, // <!-- blah --
-    CDATA: S++, // <![CDATA[ something
-    CDATA_ENDING: S++, // ]
-    CDATA_ENDING_2: S++, // ]]
-    PROC_INST: S++, // <?hi
-    PROC_INST_BODY: S++, // <?hi there
-    PROC_INST_ENDING: S++, // <?hi "there" ?
-    OPEN_TAG: S++, // <strong
-    OPEN_TAG_SLASH: S++, // <strong /
-    ATTRIB: S++, // <a
-    ATTRIB_NAME: S++, // <a foo
-    ATTRIB_NAME_SAW_WHITE: S++, // <a foo _
-    ATTRIB_VALUE: S++, // <a foo=
-    ATTRIB_VALUE_QUOTED: S++, // <a foo="bar
-    ATTRIB_VALUE_CLOSED: S++, // <a foo="bar"
-    ATTRIB_VALUE_UNQUOTED: S++, // <a foo=bar
-    ATTRIB_VALUE_ENTITY_Q: S++, // <foo bar="&quot;"
-    ATTRIB_VALUE_ENTITY_U: S++, // <foo bar=&quot
-    CLOSE_TAG: S++, // </a
-    CLOSE_TAG_SAW_WHITE: S++, // </a   >
-    SCRIPT: S++, // <script> ...
-    SCRIPT_ENDING: S++ // <script> ... <
-  }
-
-  sax.XML_ENTITIES = {
-    'amp': '&',
-    'gt': '>',
-    'lt': '<',
-    'quot': '"',
-    'apos': "'"
-  }
-
-  sax.ENTITIES = {
-    'amp': '&',
-    'gt': '>',
-    'lt': '<',
-    'quot': '"',
-    'apos': "'",
-    'AElig': 198,
-    'Aacute': 193,
-    'Acirc': 194,
-    'Agrave': 192,
-    'Aring': 197,
-    'Atilde': 195,
-    'Auml': 196,
-    'Ccedil': 199,
-    'ETH': 208,
-    'Eacute': 201,
-    'Ecirc': 202,
-    'Egrave': 200,
-    'Euml': 203,
-    'Iacute': 205,
-    'Icirc': 206,
-    'Igrave': 204,
-    'Iuml': 207,
-    'Ntilde': 209,
-    'Oacute': 211,
-    'Ocirc': 212,
-    'Ograve': 210,
-    'Oslash': 216,
-    'Otilde': 213,
-    'Ouml': 214,
-    'THORN': 222,
-    'Uacute': 218,
-    'Ucirc': 219,
-    'Ugrave': 217,
-    'Uuml': 220,
-    'Yacute': 221,
-    'aacute': 225,
-    'acirc': 226,
-    'aelig': 230,
-    'agrave': 224,
-    'aring': 229,
-    'atilde': 227,
-    'auml': 228,
-    'ccedil': 231,
-    'eacute': 233,
-    'ecirc': 234,
-    'egrave': 232,
-    'eth': 240,
-    'euml': 235,
-    'iacute': 237,
-    'icirc': 238,
-    'igrave': 236,
-    'iuml': 239,
-    'ntilde': 241,
-    'oacute': 243,
-    'ocirc': 244,
-    'ograve': 242,
-    'oslash': 248,
-    'otilde': 245,
-    'ouml': 246,
-    'szlig': 223,
-    'thorn': 254,
-    'uacute': 250,
-    'ucirc': 251,
-    'ugrave': 249,
-    'uuml': 252,
-    'yacute': 253,
-    'yuml': 255,
-    'copy': 169,
-    'reg': 174,
-    'nbsp': 160,
-    'iexcl': 161,
-    'cent': 162,
-    'pound': 163,
-    'curren': 164,
-    'yen': 165,
-    'brvbar': 166,
-    'sect': 167,
-    'uml': 168,
-    'ordf': 170,
-    'laquo': 171,
-    'not': 172,
-    'shy': 173,
-    'macr': 175,
-    'deg': 176,
-    'plusmn': 177,
-    'sup1': 185,
-    'sup2': 178,
-    'sup3': 179,
-    'acute': 180,
-    'micro': 181,
-    'para': 182,
-    'middot': 183,
-    'cedil': 184,
-    'ordm': 186,
-    'raquo': 187,
-    'frac14': 188,
-    'frac12': 189,
-    'frac34': 190,
-    'iquest': 191,
-    'times': 215,
-    'divide': 247,
-    'OElig': 338,
-    'oelig': 339,
-    'Scaron': 352,
-    'scaron': 353,
-    'Yuml': 376,
-    'fnof': 402,
-    'circ': 710,
-    'tilde': 732,
-    'Alpha': 913,
-    'Beta': 914,
-    'Gamma': 915,
-    'Delta': 916,
-    'Epsilon': 917,
-    'Zeta': 918,
-    'Eta': 919,
-    'Theta': 920,
-    'Iota': 921,
-    'Kappa': 922,
-    'Lambda': 923,
-    'Mu': 924,
-    'Nu': 925,
-    'Xi': 926,
-    'Omicron': 927,
-    'Pi': 928,
-    'Rho': 929,
-    'Sigma': 931,
-    'Tau': 932,
-    'Upsilon': 933,
-    'Phi': 934,
-    'Chi': 935,
-    'Psi': 936,
-    'Omega': 937,
-    'alpha': 945,
-    'beta': 946,
-    'gamma': 947,
-    'delta': 948,
-    'epsilon': 949,
-    'zeta': 950,
-    'eta': 951,
-    'theta': 952,
-    'iota': 953,
-    'kappa': 954,
-    'lambda': 955,
-    'mu': 956,
-    'nu': 957,
-    'xi': 958,
-    'omicron': 959,
-    'pi': 960,
-    'rho': 961,
-    'sigmaf': 962,
-    'sigma': 963,
-    'tau': 964,
-    'upsilon': 965,
-    'phi': 966,
-    'chi': 967,
-    'psi': 968,
-    'omega': 969,
-    'thetasym': 977,
-    'upsih': 978,
-    'piv': 982,
-    'ensp': 8194,
-    'emsp': 8195,
-    'thinsp': 8201,
-    'zwnj': 8204,
-    'zwj': 8205,
-    'lrm': 8206,
-    'rlm': 8207,
-    'ndash': 8211,
-    'mdash': 8212,
-    'lsquo': 8216,
-    'rsquo': 8217,
-    'sbquo': 8218,
-    'ldquo': 8220,
-    'rdquo': 8221,
-    'bdquo': 8222,
-    'dagger': 8224,
-    'Dagger': 8225,
-    'bull': 8226,
-    'hellip': 8230,
-    'permil': 8240,
-    'prime': 8242,
-    'Prime': 8243,
-    'lsaquo': 8249,
-    'rsaquo': 8250,
-    'oline': 8254,
-    'frasl': 8260,
-    'euro': 8364,
-    'image': 8465,
-    'weierp': 8472,
-    'real': 8476,
-    'trade': 8482,
-    'alefsym': 8501,
-    'larr': 8592,
-    'uarr': 8593,
-    'rarr': 8594,
-    'darr': 8595,
-    'harr': 8596,
-    'crarr': 8629,
-    'lArr': 8656,
-    'uArr': 8657,
-    'rArr': 8658,
-    'dArr': 8659,
-    'hArr': 8660,
-    'forall': 8704,
-    'part': 8706,
-    'exist': 8707,
-    'empty': 8709,
-    'nabla': 8711,
-    'isin': 8712,
-    'notin': 8713,
-    'ni': 8715,
-    'prod': 8719,
-    'sum': 8721,
-    'minus': 8722,
-    'lowast': 8727,
-    'radic': 8730,
-    'prop': 8733,
-    'infin': 8734,
-    'ang': 8736,
-    'and': 8743,
-    'or': 8744,
-    'cap': 8745,
-    'cup': 8746,
-    'int': 8747,
-    'there4': 8756,
-    'sim': 8764,
-    'cong': 8773,
-    'asymp': 8776,
-    'ne': 8800,
-    'equiv': 8801,
-    'le': 8804,
-    'ge': 8805,
-    'sub': 8834,
-    'sup': 8835,
-    'nsub': 8836,
-    'sube': 8838,
-    'supe': 8839,
-    'oplus': 8853,
-    'otimes': 8855,
-    'perp': 8869,
-    'sdot': 8901,
-    'lceil': 8968,
-    'rceil': 8969,
-    'lfloor': 8970,
-    'rfloor': 8971,
-    'lang': 9001,
-    'rang': 9002,
-    'loz': 9674,
-    'spades': 9824,
-    'clubs': 9827,
-    'hearts': 9829,
-    'diams': 9830
-  }
-
-  Object.keys(sax.ENTITIES).forEach(function (key) {
-    var e = sax.ENTITIES[key]
-    var s = typeof e === 'number' ? String.fromCharCode(e) : e
-    sax.ENTITIES[key] = s
-  })
-
-  for (var s in sax.STATE) {
-    sax.STATE[sax.STATE[s]] = s
-  }
-
-  // shorthand
-  S = sax.STATE
-
-  function emit (parser, event, data) {
-    parser[event] && parser[event](data)
-  }
-
-  function emitNode (parser, nodeType, data) {
-    if (parser.textNode) closeText(parser)
-    emit(parser, nodeType, data)
-  }
-
-  function closeText (parser) {
-    parser.textNode = textopts(parser.opt, parser.textNode)
-    if (parser.textNode) emit(parser, 'ontext', parser.textNode)
-    parser.textNode = ''
-  }
-
-  function textopts (opt, text) {
-    if (opt.trim) text = text.trim()
-    if (opt.normalize) text = text.replace(/\s+/g, ' ')
-    return text
-  }
-
-  function error (parser, er) {
-    closeText(parser)
-    if (parser.trackPosition) {
-      er += '\nLine: ' + parser.line +
-        '\nColumn: ' + parser.column +
-        '\nChar: ' + parser.c
-    }
-    er = new Error(er)
-    parser.error = er
-    emit(parser, 'onerror', er)
-    return parser
-  }
-
-  function end (parser) {
-    if (parser.sawRoot && !parser.closedRoot) strictFail(parser, 'Unclosed root tag')
-    if ((parser.state !== S.BEGIN) &&
-      (parser.state !== S.BEGIN_WHITESPACE) &&
-      (parser.state !== S.TEXT)) {
-      error(parser, 'Unexpected end')
-    }
-    closeText(parser)
-    parser.c = ''
-    parser.closed = true
-    emit(parser, 'onend')
-    SAXParser.call(parser, parser.strict, parser.opt)
-    return parser
-  }
-
-  function strictFail (parser, message) {
-    if (typeof parser !== 'object' || !(parser instanceof SAXParser)) {
-      throw new Error('bad call to strictFail')
-    }
-    if (parser.strict) {
-      error(parser, message)
-    }
-  }
-
-  function newTag (parser) {
-    if (!parser.strict) parser.tagName = parser.tagName[parser.looseCase]()
-    var parent = parser.tags[parser.tags.length - 1] || parser
-    var tag = parser.tag = { name: parser.tagName, attributes: {} }
-
-    // will be overridden if tag contails an xmlns="foo" or xmlns:foo="bar"
-    if (parser.opt.xmlns) {
-      tag.ns = parent.ns
-    }
-    parser.attribList.length = 0
-    emitNode(parser, 'onopentagstart', tag)
-  }
-
-  function qname (name, attribute) {
-    var i = name.indexOf(':')
-    var qualName = i < 0 ? [ '', name ] : name.split(':')
-    var prefix = qualName[0]
-    var local = qualName[1]
-
-    // <x "xmlns"="http://foo">
-    if (attribute && name === 'xmlns') {
-      prefix = 'xmlns'
-      local = ''
-    }
-
-    return { prefix: prefix, local: local }
-  }
-
-  function attrib (parser) {
-    if (!parser.strict) {
-      parser.attribName = parser.attribName[parser.looseCase]()
-    }
-
-    if (parser.attribList.indexOf(parser.attribName) !== -1 ||
-      parser.tag.attributes.hasOwnProperty(parser.attribName)) {
-      parser.attribName = parser.attribValue = ''
-      return
-    }
-
-    if (parser.opt.xmlns) {
-      var qn = qname(parser.attribName, true)
-      var prefix = qn.prefix
-      var local = qn.local
-
-      if (prefix === 'xmlns') {
-        // namespace binding attribute. push the binding into scope
-        if (local === 'xml' && parser.attribValue !== XML_NAMESPACE) {
-          strictFail(parser,
-            'xml: prefix must be bound to ' + XML_NAMESPACE + '\n' +
-            'Actual: ' + parser.attribValue)
-        } else if (local === 'xmlns' && parser.attribValue !== XMLNS_NAMESPACE) {
-          strictFail(parser,
-            'xmlns: prefix must be bound to ' + XMLNS_NAMESPACE + '\n' +
-            'Actual: ' + parser.attribValue)
-        } else {
-          var tag = parser.tag
-          var parent = parser.tags[parser.tags.length - 1] || parser
-          if (tag.ns === parent.ns) {
-            tag.ns = Object.create(parent.ns)
-          }
-          tag.ns[local] = parser.attribValue
-        }
-      }
-
-      // defer onattribute events until all attributes have been seen
-      // so any new bindings can take effect. preserve attribute order
-      // so deferred events can be emitted in document order
-      parser.attribList.push([parser.attribName, parser.attribValue])
-    } else {
-      // in non-xmlns mode, we can emit the event right away
-      parser.tag.attributes[parser.attribName] = parser.attribValue
-      emitNode(parser, 'onattribute', {
-        name: parser.attribName,
-        value: parser.attribValue
-      })
-    }
-
-    parser.attribName = parser.attribValue = ''
-  }
-
-  function openTag (parser, selfClosing) {
-    if (parser.opt.xmlns) {
-      // emit namespace binding events
-      var tag = parser.tag
-
-      // add namespace info to tag
-      var qn = qname(parser.tagName)
-      tag.prefix = qn.prefix
-      tag.local = qn.local
-      tag.uri = tag.ns[qn.prefix] || ''
-
-      if (tag.prefix && !tag.uri) {
-        strictFail(parser, 'Unbound namespace prefix: ' +
-          JSON.stringify(parser.tagName))
-        tag.uri = qn.prefix
-      }
-
-      var parent = parser.tags[parser.tags.length - 1] || parser
-      if (tag.ns && parent.ns !== tag.ns) {
-        Object.keys(tag.ns).forEach(function (p) {
-          emitNode(parser, 'onopennamespace', {
-            prefix: p,
-            uri: tag.ns[p]
-          })
-        })
-      }
-
-      // handle deferred onattribute events
-      // Note: do not apply default ns to attributes:
-      //   http://www.w3.org/TR/REC-xml-names/#defaulting
-      for (var i = 0, l = parser.attribList.length; i < l; i++) {
-        var nv = parser.attribList[i]
-        var name = nv[0]
-        var value = nv[1]
-        var qualName = qname(name, true)
-        var prefix = qualName.prefix
-        var local = qualName.local
-        var uri = prefix === '' ? '' : (tag.ns[prefix] || '')
-        var a = {
-          name: name,
-          value: value,
-          prefix: prefix,
-          local: local,
-          uri: uri
-        }
-
-        // if there's any attributes with an undefined namespace,
-        // then fail on them now.
-        if (prefix && prefix !== 'xmlns' && !uri) {
-          strictFail(parser, 'Unbound namespace prefix: ' +
-            JSON.stringify(prefix))
-          a.uri = prefix
-        }
-        parser.tag.attributes[name] = a
-        emitNode(parser, 'onattribute', a)
-      }
-      parser.attribList.length = 0
-    }
-
-    parser.tag.isSelfClosing = !!selfClosing
-
-    // process the tag
-    parser.sawRoot = true
-    parser.tags.push(parser.tag)
-    emitNode(parser, 'onopentag', parser.tag)
-    if (!selfClosing) {
-      // special case for <script> in non-strict mode.
-      if (!parser.noscript && parser.tagName.toLowerCase() === 'script') {
-        parser.state = S.SCRIPT
-      } else {
-        parser.state = S.TEXT
-      }
-      parser.tag = null
-      parser.tagName = ''
-    }
-    parser.attribName = parser.attribValue = ''
-    parser.attribList.length = 0
-  }
-
-  function closeTag (parser) {
-    if (!parser.tagName) {
-      strictFail(parser, 'Weird empty close tag.')
-      parser.textNode += '</>'
-      parser.state = S.TEXT
-      return
-    }
-
-    if (parser.script) {
-      if (parser.tagName !== 'script') {
-        parser.script += '</' + parser.tagName + '>'
-        parser.tagName = ''
-        parser.state = S.SCRIPT
-        return
-      }
-      emitNode(parser, 'onscript', parser.script)
-      parser.script = ''
-    }
-
-    // first make sure that the closing tag actually exists.
-    // <a><b></c></b></a> will close everything, otherwise.
-    var t = parser.tags.length
-    var tagName = parser.tagName
-    if (!parser.strict) {
-      tagName = tagName[parser.looseCase]()
-    }
-    var closeTo = tagName
-    while (t--) {
-      var close = parser.tags[t]
-      if (close.name !== closeTo) {
-        // fail the first time in strict mode
-        strictFail(parser, 'Unexpected close tag')
-      } else {
-        break
-      }
-    }
-
-    // didn't find it.  we already failed for strict, so just abort.
-    if (t < 0) {
-      strictFail(parser, 'Unmatched closing tag: ' + parser.tagName)
-      parser.textNode += '</' + parser.tagName + '>'
-      parser.state = S.TEXT
-      return
-    }
-    parser.tagName = tagName
-    var s = parser.tags.length
-    while (s-- > t) {
-      var tag = parser.tag = parser.tags.pop()
-      parser.tagName = parser.tag.name
-      emitNode(parser, 'onclosetag', parser.tagName)
-
-      var x = {}
-      for (var i in tag.ns) {
-        x[i] = tag.ns[i]
-      }
-
-      var parent = parser.tags[parser.tags.length - 1] || parser
-      if (parser.opt.xmlns && tag.ns !== parent.ns) {
-        // remove namespace bindings introduced by tag
-        Object.keys(tag.ns).forEach(function (p) {
-          var n = tag.ns[p]
-          emitNode(parser, 'onclosenamespace', { prefix: p, uri: n })
-        })
-      }
-    }
-    if (t === 0) parser.closedRoot = true
-    parser.tagName = parser.attribValue = parser.attribName = ''
-    parser.attribList.length = 0
-    parser.state = S.TEXT
-  }
-
-  function parseEntity (parser) {
-    var entity = parser.entity
-    var entityLC = entity.toLowerCase()
-    var num
-    var numStr = ''
-
-    if (parser.ENTITIES[entity]) {
-      return parser.ENTITIES[entity]
-    }
-    if (parser.ENTITIES[entityLC]) {
-      return parser.ENTITIES[entityLC]
-    }
-    entity = entityLC
-    if (entity.charAt(0) === '#') {
-      if (entity.charAt(1) === 'x') {
-        entity = entity.slice(2)
-        num = parseInt(entity, 16)
-        numStr = num.toString(16)
-      } else {
-        entity = entity.slice(1)
-        num = parseInt(entity, 10)
-        numStr = num.toString(10)
-      }
-    }
-    entity = entity.replace(/^0+/, '')
-    if (isNaN(num) || numStr.toLowerCase() !== entity) {
-      strictFail(parser, 'Invalid character entity')
-      return '&' + parser.entity + ';'
-    }
-
-    return String.fromCodePoint(num)
-  }
-
-  function beginWhiteSpace (parser, c) {
-    if (c === '<') {
-      parser.state = S.OPEN_WAKA
-      parser.startTagPosition = parser.position
-    } else if (!isWhitespace(c)) {
-      // have to process this as a text node.
-      // weird, but happens.
-      strictFail(parser, 'Non-whitespace before first tag.')
-      parser.textNode = c
-      parser.state = S.TEXT
-    }
-  }
-
-  function charAt (chunk, i) {
-    var result = ''
-    if (i < chunk.length) {
-      result = chunk.charAt(i)
-    }
-    return result
-  }
-
-  function write (chunk) {
-    var parser = this
-    if (this.error) {
-      throw this.error
-    }
-    if (parser.closed) {
-      return error(parser,
-        'Cannot write after close. Assign an onready handler.')
-    }
-    if (chunk === null) {
-      return end(parser)
-    }
-    if (typeof chunk === 'object') {
-      chunk = chunk.toString()
-    }
-    var i = 0
-    var c = ''
-    while (true) {
-      c = charAt(chunk, i++)
-      parser.c = c
-
-      if (!c) {
-        break
-      }
-
-      if (parser.trackPosition) {
-        parser.position++
-        if (c === '\n') {
-          parser.line++
-          parser.column = 0
-        } else {
-          parser.column++
-        }
-      }
-
-      switch (parser.state) {
-        case S.BEGIN:
-          parser.state = S.BEGIN_WHITESPACE
-          if (c === '\uFEFF') {
-            continue
-          }
-          beginWhiteSpace(parser, c)
-          continue
-
-        case S.BEGIN_WHITESPACE:
-          beginWhiteSpace(parser, c)
-          continue
-
-        case S.TEXT:
-          if (parser.sawRoot && !parser.closedRoot) {
-            var starti = i - 1
-            while (c && c !== '<' && c !== '&') {
-              c = charAt(chunk, i++)
-              if (c && parser.trackPosition) {
-                parser.position++
-                if (c === '\n') {
-                  parser.line++
-                  parser.column = 0
-                } else {
-                  parser.column++
-                }
-              }
-            }
-            parser.textNode += chunk.substring(starti, i - 1)
-          }
-          if (c === '<' && !(parser.sawRoot && parser.closedRoot && !parser.strict)) {
-            parser.state = S.OPEN_WAKA
-            parser.startTagPosition = parser.position
-          } else {
-            if (!isWhitespace(c) && (!parser.sawRoot || parser.closedRoot)) {
-              strictFail(parser, 'Text data outside of root node.')
-            }
-            if (c === '&') {
-              parser.state = S.TEXT_ENTITY
-            } else {
-              parser.textNode += c
-            }
-          }
-          continue
-
-        case S.SCRIPT:
-          // only non-strict
-          if (c === '<') {
-            parser.state = S.SCRIPT_ENDING
-          } else {
-            parser.script += c
-          }
-          continue
-
-        case S.SCRIPT_ENDING:
-          if (c === '/') {
-            parser.state = S.CLOSE_TAG
-          } else {
-            parser.script += '<' + c
-            parser.state = S.SCRIPT
-          }
-          continue
-
-        case S.OPEN_WAKA:
-          // either a /, ?, !, or text is coming next.
-          if (c === '!') {
-            parser.state = S.SGML_DECL
-            parser.sgmlDecl = ''
-          } else if (isWhitespace(c)) {
-            // wait for it...
-          } else if (isMatch(nameStart, c)) {
-            parser.state = S.OPEN_TAG
-            parser.tagName = c
-          } else if (c === '/') {
-            parser.state = S.CLOSE_TAG
-            parser.tagName = ''
-          } else if (c === '?') {
-            parser.state = S.PROC_INST
-            parser.procInstName = parser.procInstBody = ''
-          } else {
-            strictFail(parser, 'Unencoded <')
-            // if there was some whitespace, then add that in.
-            if (parser.startTagPosition + 1 < parser.position) {
-              var pad = parser.position - parser.startTagPosition
-              c = new Array(pad).join(' ') + c
-            }
-            parser.textNode += '<' + c
-            parser.state = S.TEXT
-          }
-          continue
-
-        case S.SGML_DECL:
-          if ((parser.sgmlDecl + c).toUpperCase() === CDATA) {
-            emitNode(parser, 'onopencdata')
-            parser.state = S.CDATA
-            parser.sgmlDecl = ''
-            parser.cdata = ''
-          } else if (parser.sgmlDecl + c === '--') {
-            parser.state = S.COMMENT
-            parser.comment = ''
-            parser.sgmlDecl = ''
-          } else if ((parser.sgmlDecl + c).toUpperCase() === DOCTYPE) {
-            parser.state = S.DOCTYPE
-            if (parser.doctype || parser.sawRoot) {
-              strictFail(parser,
-                'Inappropriately located doctype declaration')
-            }
-            parser.doctype = ''
-            parser.sgmlDecl = ''
-          } else if (c === '>') {
-            emitNode(parser, 'onsgmldeclaration', parser.sgmlDecl)
-            parser.sgmlDecl = ''
-            parser.state = S.TEXT
-          } else if (isQuote(c)) {
-            parser.state = S.SGML_DECL_QUOTED
-            parser.sgmlDecl += c
-          } else {
-            parser.sgmlDecl += c
-          }
-          continue
-
-        case S.SGML_DECL_QUOTED:
-          if (c === parser.q) {
-            parser.state = S.SGML_DECL
-            parser.q = ''
-          }
-          parser.sgmlDecl += c
-          continue
-
-        case S.DOCTYPE:
-          if (c === '>') {
-            parser.state = S.TEXT
-            emitNode(parser, 'ondoctype', parser.doctype)
-            parser.doctype = true // just remember that we saw it.
-          } else {
-            parser.doctype += c
-            if (c === '[') {
-              parser.state = S.DOCTYPE_DTD
-            } else if (isQuote(c)) {
-              parser.state = S.DOCTYPE_QUOTED
-              parser.q = c
-            }
-          }
-          continue
-
-        case S.DOCTYPE_QUOTED:
-          parser.doctype += c
-          if (c === parser.q) {
-            parser.q = ''
-            parser.state = S.DOCTYPE
-          }
-          continue
-
-        case S.DOCTYPE_DTD:
-          parser.doctype += c
-          if (c === ']') {
-            parser.state = S.DOCTYPE
-          } else if (isQuote(c)) {
-            parser.state = S.DOCTYPE_DTD_QUOTED
-            parser.q = c
-          }
-          continue
-
-        case S.DOCTYPE_DTD_QUOTED:
-          parser.doctype += c
-          if (c === parser.q) {
-            parser.state = S.DOCTYPE_DTD
-            parser.q = ''
-          }
-          continue
-
-        case S.COMMENT:
-          if (c === '-') {
-            parser.state = S.COMMENT_ENDING
-          } else {
-            parser.comment += c
-          }
-          continue
-
-        case S.COMMENT_ENDING:
-          if (c === '-') {
-            parser.state = S.COMMENT_ENDED
-            parser.comment = textopts(parser.opt, parser.comment)
-            if (parser.comment) {
-              emitNode(parser, 'oncomment', parser.comment)
-            }
-            parser.comment = ''
-          } else {
-            parser.comment += '-' + c
-            parser.state = S.COMMENT
-          }
-          continue
-
-        case S.COMMENT_ENDED:
-          if (c !== '>') {
-            strictFail(parser, 'Malformed comment')
-            // allow <!-- blah -- bloo --> in non-strict mode,
-            // which is a comment of " blah -- bloo "
-            parser.comment += '--' + c
-            parser.state = S.COMMENT
-          } else {
-            parser.state = S.TEXT
-          }
-          continue
-
-        case S.CDATA:
-          if (c === ']') {
-            parser.state = S.CDATA_ENDING
-          } else {
-            parser.cdata += c
-          }
-          continue
-
-        case S.CDATA_ENDING:
-          if (c === ']') {
-            parser.state = S.CDATA_ENDING_2
-          } else {
-            parser.cdata += ']' + c
-            parser.state = S.CDATA
-          }
-          continue
-
-        case S.CDATA_ENDING_2:
-          if (c === '>') {
-            if (parser.cdata) {
-              emitNode(parser, 'oncdata', parser.cdata)
-            }
-            emitNode(parser, 'onclosecdata')
-            parser.cdata = ''
-            parser.state = S.TEXT
-          } else if (c === ']') {
-            parser.cdata += ']'
-          } else {
-            parser.cdata += ']]' + c
-            parser.state = S.CDATA
-          }
-          continue
-
-        case S.PROC_INST:
-          if (c === '?') {
-            parser.state = S.PROC_INST_ENDING
-          } else if (isWhitespace(c)) {
-            parser.state = S.PROC_INST_BODY
-          } else {
-            parser.procInstName += c
-          }
-          continue
-
-        case S.PROC_INST_BODY:
-          if (!parser.procInstBody && isWhitespace(c)) {
-            continue
-          } else if (c === '?') {
-            parser.state = S.PROC_INST_ENDING
-          } else {
-            parser.procInstBody += c
-          }
-          continue
-
-        case S.PROC_INST_ENDING:
-          if (c === '>') {
-            emitNode(parser, 'onprocessinginstruction', {
-              name: parser.procInstName,
-              body: parser.procInstBody
-            })
-            parser.procInstName = parser.procInstBody = ''
-            parser.state = S.TEXT
-          } else {
-            parser.procInstBody += '?' + c
-            parser.state = S.PROC_INST_BODY
-          }
-          continue
-
-        case S.OPEN_TAG:
-          if (isMatch(nameBody, c)) {
-            parser.tagName += c
-          } else {
-            newTag(parser)
-            if (c === '>') {
-              openTag(parser)
-            } else if (c === '/') {
-              parser.state = S.OPEN_TAG_SLASH
-            } else {
-              if (!isWhitespace(c)) {
-                strictFail(parser, 'Invalid character in tag name')
-              }
-              parser.state = S.ATTRIB
-            }
-          }
-          continue
-
-        case S.OPEN_TAG_SLASH:
-          if (c === '>') {
-            openTag(parser, true)
-            closeTag(parser)
-          } else {
-            strictFail(parser, 'Forward-slash in opening tag not followed by >')
-            parser.state = S.ATTRIB
-          }
-          continue
-
-        case S.ATTRIB:
-          // haven't read the attribute name yet.
-          if (isWhitespace(c)) {
-            continue
-          } else if (c === '>') {
-            openTag(parser)
-          } else if (c === '/') {
-            parser.state = S.OPEN_TAG_SLASH
-          } else if (isMatch(nameStart, c)) {
-            parser.attribName = c
-            parser.attribValue = ''
-            parser.state = S.ATTRIB_NAME
-          } else {
-            strictFail(parser, 'Invalid attribute name')
-          }
-          continue
-
-        case S.ATTRIB_NAME:
-          if (c === '=') {
-            parser.state = S.ATTRIB_VALUE
-          } else if (c === '>') {
-            strictFail(parser, 'Attribute without value')
-            parser.attribValue = parser.attribName
-            attrib(parser)
-            openTag(parser)
-          } else if (isWhitespace(c)) {
-            parser.state = S.ATTRIB_NAME_SAW_WHITE
-          } else if (isMatch(nameBody, c)) {
-            parser.attribName += c
-          } else {
-            strictFail(parser, 'Invalid attribute name')
-          }
-          continue
-
-        case S.ATTRIB_NAME_SAW_WHITE:
-          if (c === '=') {
-            parser.state = S.ATTRIB_VALUE
-          } else if (isWhitespace(c)) {
-            continue
-          } else {
-            strictFail(parser, 'Attribute without value')
-            parser.tag.attributes[parser.attribName] = ''
-            parser.attribValue = ''
-            emitNode(parser, 'onattribute', {
-              name: parser.attribName,
-              value: ''
-            })
-            parser.attribName = ''
-            if (c === '>') {
-              openTag(parser)
-            } else if (isMatch(nameStart, c)) {
-              parser.attribName = c
-              parser.state = S.ATTRIB_NAME
-            } else {
-              strictFail(parser, 'Invalid attribute name')
-              parser.state = S.ATTRIB
-            }
-          }
-          continue
-
-        case S.ATTRIB_VALUE:
-          if (isWhitespace(c)) {
-            continue
-          } else if (isQuote(c)) {
-            parser.q = c
-            parser.state = S.ATTRIB_VALUE_QUOTED
-          } else {
-            strictFail(parser, 'Unquoted attribute value')
-            parser.state = S.ATTRIB_VALUE_UNQUOTED
-            parser.attribValue = c
-          }
-          continue
-
-        case S.ATTRIB_VALUE_QUOTED:
-          if (c !== parser.q) {
-            if (c === '&') {
-              parser.state = S.ATTRIB_VALUE_ENTITY_Q
-            } else {
-              parser.attribValue += c
-            }
-            continue
-          }
-          attrib(parser)
-          parser.q = ''
-          parser.state = S.ATTRIB_VALUE_CLOSED
-          continue
-
-        case S.ATTRIB_VALUE_CLOSED:
-          if (isWhitespace(c)) {
-            parser.state = S.ATTRIB
-          } else if (c === '>') {
-            openTag(parser)
-          } else if (c === '/') {
-            parser.state = S.OPEN_TAG_SLASH
-          } else if (isMatch(nameStart, c)) {
-            strictFail(parser, 'No whitespace between attributes')
-            parser.attribName = c
-            parser.attribValue = ''
-            parser.state = S.ATTRIB_NAME
-          } else {
-            strictFail(parser, 'Invalid attribute name')
-          }
-          continue
-
-        case S.ATTRIB_VALUE_UNQUOTED:
-          if (!isAttribEnd(c)) {
-            if (c === '&') {
-              parser.state = S.ATTRIB_VALUE_ENTITY_U
-            } else {
-              parser.attribValue += c
-            }
-            continue
-          }
-          attrib(parser)
-          if (c === '>') {
-            openTag(parser)
-          } else {
-            parser.state = S.ATTRIB
-          }
-          continue
-
-        case S.CLOSE_TAG:
-          if (!parser.tagName) {
-            if (isWhitespace(c)) {
-              continue
-            } else if (notMatch(nameStart, c)) {
-              if (parser.script) {
-                parser.script += '</' + c
-                parser.state = S.SCRIPT
-              } else {
-                strictFail(parser, 'Invalid tagname in closing tag.')
-              }
-            } else {
-              parser.tagName = c
-            }
-          } else if (c === '>') {
-            closeTag(parser)
-          } else if (isMatch(nameBody, c)) {
-            parser.tagName += c
-          } else if (parser.script) {
-            parser.script += '</' + parser.tagName
-            parser.tagName = ''
-            parser.state = S.SCRIPT
-          } else {
-            if (!isWhitespace(c)) {
-              strictFail(parser, 'Invalid tagname in closing tag')
-            }
-            parser.state = S.CLOSE_TAG_SAW_WHITE
-          }
-          continue
-
-        case S.CLOSE_TAG_SAW_WHITE:
-          if (isWhitespace(c)) {
-            continue
-          }
-          if (c === '>') {
-            closeTag(parser)
-          } else {
-            strictFail(parser, 'Invalid characters in closing tag')
-          }
-          continue
-
-        case S.TEXT_ENTITY:
-        case S.ATTRIB_VALUE_ENTITY_Q:
-        case S.ATTRIB_VALUE_ENTITY_U:
-          var returnState
-          var buffer
-          switch (parser.state) {
-            case S.TEXT_ENTITY:
-              returnState = S.TEXT
-              buffer = 'textNode'
-              break
-
-            case S.ATTRIB_VALUE_ENTITY_Q:
-              returnState = S.ATTRIB_VALUE_QUOTED
-              buffer = 'attribValue'
-              break
-
-            case S.ATTRIB_VALUE_ENTITY_U:
-              returnState = S.ATTRIB_VALUE_UNQUOTED
-              buffer = 'attribValue'
-              break
-          }
-
-          if (c === ';') {
-            parser[buffer] += parseEntity(parser)
-            parser.entity = ''
-            parser.state = returnState
-          } else if (isMatch(parser.entity.length ? entityBody : entityStart, c)) {
-            parser.entity += c
-          } else {
-            strictFail(parser, 'Invalid character in entity name')
-            parser[buffer] += '&' + parser.entity + c
-            parser.entity = ''
-            parser.state = returnState
-          }
-
-          continue
-
-        default:
-          throw new Error(parser, 'Unknown state: ' + parser.state)
-      }
-    } // while
-
-    if (parser.position >= parser.bufferCheckPosition) {
-      checkBufferLength(parser)
-    }
-    return parser
-  }
-
-  /*! http://mths.be/fromcodepoint v0.1.0 by @mathias */
-  /* istanbul ignore next */
-  if (!String.fromCodePoint) {
-    (function () {
-      var stringFromCharCode = String.fromCharCode
-      var floor = Math.floor
-      var fromCodePoint = function () {
-        var MAX_SIZE = 0x4000
-        var codeUnits = []
-        var highSurrogate
-        var lowSurrogate
-        var index = -1
-        var length = arguments.length
-        if (!length) {
-          return ''
-        }
-        var result = ''
-        while (++index < length) {
-          var codePoint = Number(arguments[index])
-          if (
-            !isFinite(codePoint) || // `NaN`, `+Infinity`, or `-Infinity`
-            codePoint < 0 || // not a valid Unicode code point
-            codePoint > 0x10FFFF || // not a valid Unicode code point
-            floor(codePoint) !== codePoint // not an integer
-          ) {
-            throw RangeError('Invalid code point: ' + codePoint)
-          }
-          if (codePoint <= 0xFFFF) { // BMP code point
-            codeUnits.push(codePoint)
-          } else { // Astral code point; split in surrogate halves
-            // http://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-            codePoint -= 0x10000
-            highSurrogate = (codePoint >> 10) + 0xD800
-            lowSurrogate = (codePoint % 0x400) + 0xDC00
-            codeUnits.push(highSurrogate, lowSurrogate)
-          }
-          if (index + 1 === length || codeUnits.length > MAX_SIZE) {
-            result += stringFromCharCode.apply(null, codeUnits)
-            codeUnits.length = 0
-          }
-        }
-        return result
-      }
-      /* istanbul ignore next */
-      if (Object.defineProperty) {
-        Object.defineProperty(String, 'fromCodePoint', {
-          value: fromCodePoint,
-          configurable: true,
-          writable: true
-        })
-      } else {
-        String.fromCodePoint = fromCodePoint
-      }
-    }())
-  }
-})(typeof exports === 'undefined' ? this.sax = {} : exports)
-
-}).call(this,require("buffer").Buffer)
-},{"buffer":3,"stream":32,"string_decoder":37}],56:[function(require,module,exports){
-/**
- * http://en.wikipedia.org/wiki/YouTube#Quality_and_formats
- */
-module.exports = {
-
-  '5': {
-    container: 'flv',
-    resolution: '240p',
-    encoding: 'Sorenson H.283',
-    profile: null,
-    bitrate: '0.25',
-    audioEncoding: 'mp3',
-    audioBitrate: 64,
-  },
-
-  '6': {
-    container: 'flv',
-    resolution: '270p',
-    encoding: 'Sorenson H.263',
-    profile: null,
-    bitrate: '0.8',
-    audioEncoding: 'mp3',
-    audioBitrate: 64,
-  },
-
-  '13': {
-    container: '3gp',
-    resolution: null,
-    encoding: 'MPEG-4 Visual',
-    profile: null,
-    bitrate: '0.5',
-    audioEncoding: 'aac',
-    audioBitrate: null,
-  },
-
-  '17': {
-    container: '3gp',
-    resolution: '144p',
-    encoding: 'MPEG-4 Visual',
-    profile: 'simple',
-    bitrate: '0.05',
-    audioEncoding: 'aac',
-    audioBitrate: 24,
-  },
-
-  '18': {
-    container: 'mp4',
-    resolution: '360p',
-    encoding: 'H.264',
-    profile: 'baseline',
-    bitrate: '0.5',
-    audioEncoding: 'aac',
-    audioBitrate: 96,
-  },
-
-  '22': {
-    container: 'mp4',
-    resolution: '720p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '2-3',
-    audioEncoding: 'aac',
-    audioBitrate: 192,
-  },
-
-  '34': {
-    container: 'flv',
-    resolution: '360p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.5',
-    audioEncoding: 'aac',
-    audioBitrate: 128,
-  },
-
-  '35': {
-    container: 'flv',
-    resolution: '480p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.8-1',
-    audioEncoding: 'aac',
-    audioBitrate: 128,
-  },
-
-  '36': {
-    container: '3gp',
-    resolution: '240p',
-    encoding: 'MPEG-4 Visual',
-    profile: 'simple',
-    bitrate: '0.175',
-    audioEncoding: 'aac',
-    audioBitrate: 32,
-  },
-
-  '37': {
-    container: 'mp4',
-    resolution: '1080p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '3-5.9',
-    audioEncoding: 'aac',
-    audioBitrate: 192,
-  },
-
-  '38': {
-    container: 'mp4',
-    resolution: '3072p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '3.5-5',
-    audioEncoding: 'aac',
-    audioBitrate: 192,
-  },
-
-  '43': {
-    container: 'webm',
-    resolution: '360p',
-    encoding: 'VP8',
-    profile: null,
-    bitrate: '0.5-0.75',
-    audioEncoding: 'vorbis',
-    audioBitrate: 128,
-  },
-
-  '44': {
-    container: 'webm',
-    resolution: '480p',
-    encoding: 'VP8',
-    profile: null,
-    bitrate: '1',
-    audioEncoding: 'vorbis',
-    audioBitrate: 128,
-  },
-
-  '45': {
-    container: 'webm',
-    resolution: '720p',
-    encoding: 'VP8',
-    profile: null,
-    bitrate: '2',
-    audioEncoding: 'vorbis',
-    audioBitrate: 192,
-  },
-
-  '46': {
-    container: 'webm',
-    resolution: '1080p',
-    encoding: 'vp8',
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'vorbis',
-    audioBitrate: 192,
-  },
-
-  '82': {
-    container: 'mp4',
-    resolution: '360p',
-    encoding: 'H.264',
-    profile: '3d',
-    bitrate: '0.5',
-    audioEncoding: 'aac',
-    audioBitrate: 96,
-  },
-
-  '83': {
-    container: 'mp4',
-    resolution: '240p',
-    encoding: 'H.264',
-    profile: '3d',
-    bitrate: '0.5',
-    audioEncoding: 'aac',
-    audioBitrate: 96,
-  },
-
-  '84': {
-    container: 'mp4',
-    resolution: '720p',
-    encoding: 'H.264',
-    profile: '3d',
-    bitrate: '2-3',
-    audioEncoding: 'aac',
-    audioBitrate: 192,
-  },
-
-  '85': {
-    container: 'mp4',
-    resolution: '1080p',
-    encoding: 'H.264',
-    profile: '3d',
-    bitrate: '3-4',
-    audioEncoding: 'aac',
-    audioBitrate: 192,
-  },
-
-  '100': {
-    container: 'webm',
-    resolution: '360p',
-    encoding: 'VP8',
-    profile: '3d',
-    bitrate: null,
-    audioEncoding: 'vorbis',
-    audioBitrate: 128,
-  },
-
-  '101': {
-    container: 'webm',
-    resolution: '360p',
-    encoding: 'VP8',
-    profile: '3d',
-    bitrate: null,
-    audioEncoding: 'vorbis',
-    audioBitrate: 192,
-  },
-
-  '102': {
-    container: 'webm',
-    resolution: '720p',
-    encoding: 'VP8',
-    profile: '3d',
-    bitrate: null,
-    audioEncoding: 'vorbis',
-    audioBitrate: 192,
-  },
-
-  // DASH (video only)
-  '133': {
-    container: 'mp4',
-    resolution: '240p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.2-0.3',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '134': {
-    container: 'mp4',
-    resolution: '360p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.3-0.4',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '135': {
-    container: 'mp4',
-    resolution: '480p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.5-1',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '136': {
-    container: 'mp4',
-    resolution: '720p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '1-1.5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '137': {
-    container: 'mp4',
-    resolution: '1080p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '2.5-3',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '138': {
-    container: 'mp4',
-    resolution: '4320p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '13.5-25',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '160': {
-    container: 'mp4',
-    resolution: '144p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.1',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '242': {
-    container: 'webm',
-    resolution: '240p',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '0.1-0.2',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '243': {
-    container: 'webm',
-    resolution: '360p',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '0.25',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '244': {
-    container: 'webm',
-    resolution: '480p',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '0.5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '247': {
-    container: 'webm',
-    resolution: '720p',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '0.7-0.8',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '248': {
-    container: 'webm',
-    resolution: '1080p',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '1.5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '264': {
-    container: 'mp4',
-    resolution: '1440p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '4-4.5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '266': {
-    container: 'mp4',
-    resolution: '2160p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '12.5-16',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '271': {
-    container: 'webm',
-    resolution: '1440p',
-    encoding: 'VP9',
-    profile: 'profle 0',
-    bitrate: '9',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '272': {
-    container: 'webm',
-    resolution: '4320p',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '20-25',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '278': {
-    container: 'webm',
-    resolution: '144p 15fps',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '0.08',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '298': {
-    container: 'mp4',
-    resolution: '720p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '3-3.5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '299': {
-    container: 'mp4',
-    resolution: '1080p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '5.5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '302': {
-    container: 'webm',
-    resolution: '720p HFR',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '2.5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '303': {
-    container: 'webm',
-    resolution: '1080p HFR',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '308': {
-    container: 'webm',
-    resolution: '1440p HFR',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '10',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '313': {
-    container: 'webm',
-    resolution: '2160p',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '13-15',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '315': {
-    container: 'webm',
-    resolution: '2160p HFR',
-    encoding: 'VP9',
-    profile: 'profile 0',
-    bitrate: '20-25',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '330': {
-    container: 'webm',
-    resolution: '144p HDR, HFR',
-    encoding: 'VP9',
-    profile: 'profile 2',
-    bitrate: '0.08',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '331': {
-    container: 'webm',
-    resolution: '240p HDR, HFR',
-    encoding: 'VP9',
-    profile: 'profile 2',
-    bitrate: '0.1-0.15',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '332': {
-    container: 'webm',
-    resolution: '360p HDR, HFR',
-    encoding: 'VP9',
-    profile: 'profile 2',
-    bitrate: '0.25',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '333': {
-    container: 'webm',
-    resolution: '240p HDR, HFR',
-    encoding: 'VP9',
-    profile: 'profile 2',
-    bitrate: '0.5',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '334': {
-    container: 'webm',
-    resolution: '720p HDR, HFR',
-    encoding: 'VP9',
-    profile: 'profile 2',
-    bitrate: '1',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '335': {
-    container: 'webm',
-    resolution: '1080p HDR, HFR',
-    encoding: 'VP9',
-    profile: 'profile 2',
-    bitrate: '1.5-2',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '336': {
-    container: 'webm',
-    resolution: '1440p HDR, HFR',
-    encoding: 'VP9',
-    profile: 'profile 2',
-    bitrate: '5-7',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  '337': {
-    container: 'webm',
-    resolution: '2160p HDR, HFR',
-    encoding: 'VP9',
-    profile: 'profile 2',
-    bitrate: '12-14',
-    audioEncoding: null,
-    audioBitrate: null,
-  },
-
-  // DASH (audio only)
-  '139': {
-    container: 'mp4',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'aac',
-    audioBitrate: 48,
-  },
-
-  '140': {
-    container: 'm4a',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'aac',
-    audioBitrate: 128,
-  },
-
-  '141': {
-    container: 'mp4',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'aac',
-    audioBitrate: 256,
-  },
-
-  '171': {
-    container: 'webm',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'vorbis',
-    audioBitrate: 128,
-  },
-
-  '172': {
-    container: 'webm',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'vorbis',
-    audioBitrate: 192,
-  },
-
-  '249': {
-    container: 'webm',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'opus',
-    audioBitrate: 48,
-  },
-  '250': {
-    container: 'webm',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'opus',
-    audioBitrate: 64,
-  },
-  '251': {
-    container: 'webm',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'opus',
-    audioBitrate: 160,
-  },
-
-  // Live streaming
-  '91': {
-    container: 'ts',
-    resolution: '144p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.1',
-    audioEncoding: 'aac',
-    audioBitrate: 48,
-  },
-
-  '92': {
-    container: 'ts',
-    resolution: '240p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.15-0.3',
-    audioEncoding: 'aac',
-    audioBitrate: 48,
-  },
-
-  '93': {
-    container: 'ts',
-    resolution: '360p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.5-1',
-    audioEncoding: 'aac',
-    audioBitrate: 128,
-  },
-
-  '94': {
-    container: 'ts',
-    resolution: '480p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '0.8-1.25',
-    audioEncoding: 'aac',
-    audioBitrate: 128,
-  },
-
-  '95': {
-    container: 'ts',
-    resolution: '720p',
-    encoding: 'H.264',
-    profile: 'main',
-    bitrate: '1.5-3',
-    audioEncoding: 'aac',
-    audioBitrate: 256,
-  },
-
-  '96': {
-    container: 'ts',
-    resolution: '1080p',
-    encoding: 'H.264',
-    profile: 'high',
-    bitrate: '2.5-6',
-    audioEncoding: 'aac',
-    audioBitrate: 256,
-  },
-
-  '120': {
-    container: 'flv',
-    resolution: '720p',
-    encoding: 'H.264',
-    profile: 'Main@L3.1',
-    bitrate: '2',
-    audioEncoding: 'aac',
-    audioBitrate: 128,
-  },
-
-  '127': {
-    container: 'ts',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'aac',
-    audioBitrate: 96,
-  },
-
-  '128': {
-    container: 'ts',
-    resolution: null,
-    encoding: null,
-    profile: null,
-    bitrate: null,
-    audioEncoding: 'aac',
-    audioBitrate: 96,
-  },
-
-  '132': {
-    container: 'ts',
-    resolution: '240p',
-    encoding: 'H.264',
-    profile: 'baseline',
-    bitrate: '0.15-0.2',
-    audioEncoding: 'aac',
-    audioBitrate: 48,
-  },
-
-  '151': {
-    container: 'ts',
-    resolution: '720p',
-    encoding: 'H.264',
-    profile: 'baseline',
-    bitrate: '0.05',
-    audioEncoding: 'aac',
-    audioBitrate: 24,
-  },
-
-};
-
-},{}],57:[function(require,module,exports){
-'use strict';
-
-const PassThrough = require('stream').PassThrough;
-const deprecate   = require('util').deprecate;
-const getInfo     = require('./info');
-const util        = require('./util');
-const sig         = require('./sig');
-const request     = require('miniget');
-const m3u8stream  = require('m3u8stream');
-
-
-/**
- * @param {String} link
- * @param {!Object} options
- * @return {ReadableStream}
- */
-var ytdl = module.exports = function ytdl(link, options) {
-  var stream = createStream(options);
-  getInfo(link, options, (err, info) => {
-    if (err) {
-      stream.emit('error', err);
-      return;
-    }
-
-    downloadFromInfoCallback(stream, info, options);
-  });
-
-  return stream;
-};
-
-
-ytdl.getInfo = getInfo;
-ytdl.chooseFormat = util.chooseFormat;
-ytdl.filterFormats = util.filterFormats;
-ytdl.validateID = util.validateID;
-ytdl.validateURL = util.validateURL;
-ytdl.validateLink = deprecate(util.validateURL,
-  'ytdl.validateLink: Renamed to ytdl.validateURL');
-ytdl.getURLVideoID = util.getURLVideoID;
-ytdl.getVideoID = util.getVideoID;
-ytdl.cache = sig.cache;
-
-
-function createStream(options) {
-  var stream = new PassThrough({
-    highWaterMark: options && options.highWaterMark || null,
-  });
-  stream.destroy = () => { stream._isDestroyed = true; };
-  return stream;
-}
-
-
-/**
- * Chooses a format to download.
- *
- * @param {stream.Readable} stream
- * @param {Object} info
- * @param {Object} options
- */
-function downloadFromInfoCallback(stream, info, options) {
-  options = options || {};
-  var format = util.chooseFormat(info.formats, options);
-  if (format instanceof Error) {
-    // The caller expects this function to be async.
-    setImmediate(() => {
-      stream.emit('error', format);
-    });
-    return;
-  }
-  stream.emit('info', info, format);
-  if (stream._isDestroyed) { return; }
-
-  var url = format.url;
-  if (format.live) {
-    let req = m3u8stream(url, {
-      chunkReadahead: +info.live_chunk_readahead,
-      requestOptions: options.requestOptions,
-    });
-    req.on('error', stream.emit.bind(stream, 'error'));
-    stream.destroy = req.end.bind(req);
-    req.pipe(stream);
-
-  } else {
-    if (options.begin) {
-      url += '&begin=' + util.fromHumanTime(options.begin);
-    }
-    doDownload(stream, url, options, {
-      trys: options.retries || 5,
-      range: {
-        start: options.range && options.range.start ? options.range.start : 0,
-        end: options.range && options.range.end ? options.range.end : -1,
-      },
-      downloaded: 0,
-    });
-  }
-}
-
-
-/**
- * Tries to download the video. If the download stops halfway, attempts to
- * reconnect, continuing the download where it left off.
- *
- * @param {stream.Readable} stream
- * @param {String} url
- * @param {Object} options
- * @param {Object} reconnectInfo
- */
-function doDownload(stream, url, options, reconnectInfo) {
-  if (reconnectInfo.trys === 0) {
-    stream.emit('error', new Error('Too many reconnects'));
-    return;
-  }
-
-  // Start downloading the video.
-  var rangedUrl = url;
-  if (reconnectInfo.downloaded !== 0 ||
-      reconnectInfo.range.start !== 0 ||
-      reconnectInfo.range.end !== -1) {
-    let start = reconnectInfo.range.start + reconnectInfo.downloaded;
-    let end = reconnectInfo.range.end != -1 ? reconnectInfo.range.end : '';
-    rangedUrl += '&range=' + start + '-' + end;
-  }
-
-  var req = request(rangedUrl, options.requestOptions);
-
-  function cleanup() {
-    req.removeListener('end', onend);
-    req.removeListener('data', ondata);
-    req.unpipe();
-  }
-
-  var myres = false;
-  stream.destroy = () => {
-    stream._isDestroyed = true;
-    req.abort();
-    cleanup();
-  };
-
-  // Forward events from the request to the stream.
-  ['abort', 'request', 'response'].forEach(function(event) {
-    req.on(event, (arg) => {
-      stream.emit.call(stream, event, arg);
-    });
-  });
-
-  function onend() {
-    cleanup();
-
-    // Reconnect if there is more to be downloaded.
-    if (reconnectInfo.downloaded < reconnectInfo.total) {
-      reconnectInfo.trys = reconnectInfo.trys - 1;
-      doDownload(stream, url, options, reconnectInfo);
-    } else {
-      stream.end();
-    }
-  }
-
-  req.on('error', (err) => {
-    if (stream._isDestroyed || !myres) {
-      stream.emit('error', err);
-    } else {
-      onend();
-    }
-  });
-
-  req.on('response', (res) => {
-    myres = true;
-    if (stream._isDestroyed) { return; }
-    if (reconnectInfo.downloaded === 0) {
-      reconnectInfo.total = parseInt(res.headers['content-length']);
-    }
-  });
-
-  function ondata(chunk) {
-    var downloaded = reconnectInfo.downloaded += chunk.length;
-    stream.emit('progress', chunk.length, downloaded, reconnectInfo.total);
-  }
-
-  req.on('data', ondata);
-  req.on('end', onend);
-  req.pipe(stream, { end: false });
-}
-
-
-/**
- * Can be used to download video after its `info` is gotten through
- * `ytdl.getInfo()`. In case the user might want to look at the
- * `info` object before deciding to download.
- *
- * @param {Object} info
- * @param {!Object} options
- */
-ytdl.downloadFromInfo = (info, options) => {
-  var stream = createStream(options);
-  setImmediate(() => {
-    downloadFromInfoCallback(stream, info, options);
-  });
-  return stream;
-};
-
-},{"./info":58,"./sig":59,"./util":60,"m3u8stream":51,"miniget":54,"stream":32,"util":44}],58:[function(require,module,exports){
-'use strict';
-
-const urllib      = require('url');
-const querystring = require('querystring');
-const sax         = require('sax');
-const request     = require('miniget');
-const util        = require('./util');
-const sig         = require('./sig');
-const FORMATS     = require('./formats');
-
-
-const VIDEO_URL = 'https://www.youtube.com/watch?v=';
-const EMBED_URL = 'https://www.youtube.com/embed/';
-const VIDEO_EURL = 'https://youtube.googleapis.com/v/';
-const INFO_HOST = 'www.youtube.com';
-const INFO_PATH = '/get_video_info';
-const KEYS_TO_SPLIT = [
-  'keywords',
-  'fmt_list',
-  'fexp',
-  'watermark'
-];
-
-
-/**
- * Gets info from a video.
- *
- * @param {String} link
- * @param {Object} options
- * @param {Function(Error, Object)} callback
- */
-module.exports = function getInfo(link, options, callback) {
-  if (typeof options === 'function') {
-    callback = options;
-    options = {};
-  } else if (!options) {
-    options = {};
-  }
-  if (!callback) {
-    return new Promise((resolve, reject) => {
-      getInfo(link, options, (err, info) => {
-        if (err) return reject(err);
-        resolve(info);
-      });
-    });
-  }
-
-  var id = util.getVideoID(link);
-  if (id instanceof Error) return callback(id);
-
-  // Try getting config from the video page first.
-  var params = 'hl=' + (options.lang || 'en');
-  var url = VIDEO_URL + id + '&' + params;
-  
-  request(url, options.requestOptions, (err, res, body) => {
-    if (err) return callback(err);
-
-    // Check if there are any errors with this video page.
-    var unavailableMsg = util.between(body, '<div id="player-unavailable"', '>');
-    if (unavailableMsg &&
-        !/\bhid\b/.test(util.between(unavailableMsg, 'class="', '"'))) {
-      // Ignore error about age restriction.
-      if (!body.includes('<div id="watch7-player-age-gate-content"')) {
-        return callback(new Error(util.between(body,
-          '<h1 id="unavailable-message" class="message">', '</h1>').trim()));
-      }
-    }
-
-    // Parse out additional metadata from this page.
-    var additional = {
-      // Get the author/uploader.
-      author: util.getAuthor(body),
-
-      // Get the day the vid was published.
-      published: util.getPublished(body),
-
-      // Get description.
-      description: util.getVideoDescription(body),
-
-      // Get related videos.
-      related_videos: util.getRelatedVideos(body),
-
-      // Give the canonical link to the video.
-      video_url: url,
-    };
-
-    var jsonStr = util.between(body, 'ytplayer.config = ', '</script>');
-    var config;
-    if (jsonStr) {
-      config = jsonStr.slice(0, jsonStr.lastIndexOf(';ytplayer.load'));
-      gotConfig(id, options, additional, config, false, callback);
-
-    } else {
-      // If the video page doesn't work, maybe because it has mature content.
-      // and requires an account logged in to view, try the embed page.
-      url = EMBED_URL + id + '?' + params;
-      request(url, options.requestOptions, (err, res, body) => {
-        if (err) return callback(err);
-        config = util.between(body, 't.setConfig({\'PLAYER_CONFIG\': ', '},\'');
-        gotConfig(id, options, additional, config, true, callback);
-      });
-    }
-  });
-};
-
-
-/**
- * @param {Object} id
- * @param {Object} options
- * @param {Object} additional
- * @param {Object} config
- * @param {Boolean} appendConfig
- * @param {Function(Error, Object)} callback
- */
-function gotConfig(id, options, additional, config, appendConfig, callback) {
-  if (!config) {
-    return callback(new Error('Could not find player config'));
-  }
-  try {
-    config = JSON.parse(config + (appendConfig ? '}' : ''));
-  } catch (err) {
-    return callback(new Error('Error parsing config: ' + err.message));
-  }
-  var url = urllib.format({
-    protocol: 'https',
-    host: INFO_HOST,
-    pathname: INFO_PATH,
-    query: {
-      video_id: id,
-      eurl: VIDEO_EURL + id,
-      ps: 'default',
-      gl: 'US',
-      hl: (options.lang || 'en'),
-      sts: config.sts,
-      el: 'info',
-    },
-  });
-  request(url, options.requestOptions, (err, res, body) => {
-    if (err) return callback(err);
-    var info = querystring.parse(body);
-    if (info.requires_purchase === '1') {
-      return callback(new Error('Video requires purchase'));
-    } 
-
-    // Split some keys by commas.
-    KEYS_TO_SPLIT.forEach((key) => {
-      if (!info[key]) return;
-      info[key] = info[key]
-        .split(',')
-        .filter((v) => v !== '');
-    });
-
-    if (config.args.player_response) {
-      try {
-        info.player_response = JSON.parse(config.args.player_response);
-      } catch (err) {
-        return callback(
-          new Error('Error parsing `player_response`: ' + err.message));
-      }
-    }
-
-    info.fmt_list = info.fmt_list ?
-      info.fmt_list.map((format) => format.split('/')) : [];
-
-    info.formats = util.parseFormats(info);
-
-    // Add additional properties to info.
-    info = util.objectAssign(info, additional, false);
-
-    if (info.formats.length ||
-        config.args.dashmpd || info.dashmpd || info.hlsvp) {
-      var html5playerfile = urllib.resolve(VIDEO_URL, config.assets.js);
-      sig.getTokens(html5playerfile, options, (err, tokens) => {
-        if (err) return callback(err);
-
-        sig.decipherFormats(info.formats, tokens, options.debug);
-
-        var funcs = [];
-
-        if (config.args.dashmpd) {
-          let dashmpd = decipherURL(config.args.dashmpd, tokens);
-          funcs.push(getDashManifest.bind(null, dashmpd, options));
-        }
-
-        if (info.dashmpd && info.dashmpd !== config.args.dashmpd) {
-          let dashmpd = decipherURL(info.dashmpd, tokens);
-          funcs.push(getDashManifest.bind(null, dashmpd, options));
-        }
-
-        if (info.hlsvp) {
-          info.hlsvp = decipherURL(info.hlsvp, tokens);
-          funcs.push(getM3U8.bind(null, info.hlsvp, options));
-        }
-
-        util.parallel(funcs, (err, results) => {
-          if (err) return callback(err);
-          if (results[0]) { mergeFormats(info, results[0]); }
-          if (results[1]) { mergeFormats(info, results[1]); }
-          if (results[2]) { mergeFormats(info, results[2]); }
-          if (!info.formats.length) {
-            callback(new Error('No formats found'));
-            return;
-          }
-
-          if (options.debug) {
-            info.formats.forEach((format) => {
-              var itag = format.itag;
-              if (!FORMATS[itag]) {
-                console.warn(`No format metadata for itag ${itag} found`);
-              }
-            });
-          }
-
-          info.formats.forEach(util.addFormatMeta);
-          info.formats.sort(util.sortFormats);
-          callback(null, info);
-
-        });
-      });
-    } else {
-      callback(new Error('This video is unavailable'));
-    }
-  });
-}
-
-
-/**
- * @param {String} url
- * @param {Array.<String>} tokens
- */
-function decipherURL(url, tokens) {
-  return url.replace(/\/s\/([a-fA-F0-9.]+)/, (_, s) => {
-    return '/signature/' + sig.decipher(tokens, s);
-  });
-}
-
-
-/**
- * Merges formats from DASH or M3U8 with formats from video info page.
- *
- * @param {Object} info
- * @param {Object} formatsMap
- */
-function mergeFormats(info, formatsMap) {
-  info.formats.forEach((f) => {
-    var cf = formatsMap[f.itag];
-    if (cf) {
-      for (let key in f) { cf[key] = f[key]; }
-    } else {
-      formatsMap[f.itag] = f;
-    }
-  });
-  info.formats = [];
-  for (let itag in formatsMap) { info.formats.push(formatsMap[itag]); }
-}
-
-
-/**
- * Gets additional DASH formats.
- *
- * @param {String} url
- * @param {Object} options
- * @param {Function(!Error, Array.<Object>)} callback
- */
-function getDashManifest(url, options, callback) {
-  var formats = {};
-  var currentFormat = null;
-  var expectUrl = false;
-
-  var parser = sax.parser(false);
-  parser.onerror = callback;
-  parser.onopentag = (node) => {
-    if (node.name === 'REPRESENTATION') {
-      var itag = node.attributes.ID;
-      currentFormat = { itag: itag };
-      formats[itag] = currentFormat;
-    }
-    expectUrl = node.name === 'BASEURL';
-  };
-  parser.ontext = (text) => {
-    if (expectUrl) {
-      currentFormat.url = text;
-    }
-  };
-  parser.onend = () => { callback(null, formats); };
-
-  var req = request(urllib.resolve(VIDEO_URL, url), options.requestOptions);
-  req.setEncoding('utf8');
-  req.on('error', callback);
-  req.on('data', (chunk) => { parser.write(chunk); });
-  req.on('end', parser.close.bind(parser));
-}
-
-
-/**
- * Gets additional formats.
- *
- * @param {String} url
- * @param {Object} options
- * @param {Function(!Error, Array.<Object>)} callback
- */
-function getM3U8(url, options, callback) {
-  url = urllib.resolve(VIDEO_URL, url);
-  request(url, options.requestOptions, (err, res, body) => {
-    if (err) return callback(err);
-
-    var formats = {};
-    body
-      .split('\n')
-      .filter((line) => /https?:\/\//.test(line))
-      .forEach((line) => {
-        var itag = line.match(/\/itag\/(\d+)\//)[1];
-        formats[itag] = { itag: itag, url: line };
-      });
-    callback(null, formats);
-  });
-}
-
-},{"./formats":56,"./sig":59,"./util":60,"miniget":54,"querystring":17,"sax":55,"url":39}],59:[function(require,module,exports){
-'use strict';
-
-const url     = require('url');
-const request = require('miniget');
-
-
-// A shared cache to keep track of html5player.js tokens.
-exports.cache = new Map();
-
-
-/**
- * Extract signature deciphering tokens from html5player file.
- *
- * @param {String} html5playerfile
- * @param {Object} options
- * @param {Function(!Error, Array.<String>)} callback
- */
-exports.getTokens = (html5playerfile, options, callback) => {
-  var key, cachedTokens;
-  var rs = /(?:html5)?player[-_]([a-zA-Z0-9\-_]+)(?:\.js|\/)/
-    .exec(html5playerfile);
-  if (rs) {
-    key = rs[1];
-    cachedTokens = exports.cache.get(key);
-  } else {
-    console.warn('Could not extract html5player key:', html5playerfile);
-  }
-  if (cachedTokens) {
-    callback(null, cachedTokens);
-  } else {
-    request(html5playerfile, options.requestOptions, (err, res, body) => {
-      if (err) return callback(err);
-
-      var tokens = exports.extractActions(body);
-      if (key && (!tokens || !tokens.length)) {
-        callback(new Error('Could not extract signature deciphering actions'));
-        return;
-      }
-
-      exports.cache.set(key, tokens);
-      callback(null, tokens);
-    });
-  }
-};
-
-
-/**
- * Decipher a signature based on action tokens.
- *
- * @param {Array.<String>} tokens
- * @param {String} sig
- * @return {String}
- */
-exports.decipher = (tokens, sig) => {
-  sig = sig.split('');
-  for (let i = 0, len = tokens.length; i < len; i++) {
-    let token = tokens[i], pos;
-    switch (token[0]) {
-      case 'r':
-        sig = sig.reverse();
-        break;
-      case 'w':
-        pos = ~~token.slice(1);
-        sig = swapHeadAndPosition(sig, pos);
-        break;
-      case 's':
-        pos = ~~token.slice(1);
-        sig = sig.slice(pos);
-        break;
-      case 'p':
-        pos = ~~token.slice(1);
-        sig.splice(0, pos);
-        break;
-    }
-  }
-  return sig.join('');
-};
-
-
-/**
- * Swaps the first element of an array with one of given position.
- *
- * @param {Array.<Object>} arr
- * @param {Number} position
- * @return {Array.<Object>}
- */
-function swapHeadAndPosition(arr, position) {
-  var first = arr[0];
-  arr[0] = arr[position % arr.length];
-  arr[position] = first;
-  return arr;
-}
-
-
-var jsVarStr = '[a-zA-Z_\\$][a-zA-Z_0-9]*';
-var jsSingleQuoteStr = `'[^'\\\\]*(:?\\\\[\\s\\S][^'\\\\]*)*'`;
-var jsDoubleQuoteStr = `"[^"\\\\]*(:?\\\\[\\s\\S][^"\\\\]*)*"`;
-var jsQuoteStr = `(?:${jsSingleQuoteStr}|${jsDoubleQuoteStr})`;
-var jsKeyStr = `(?:${jsVarStr}|${jsQuoteStr})`;
-var jsPropStr = `(?:\\.${jsVarStr}|\\[${jsQuoteStr}\\])`;
-var jsEmptyStr = `(?:''|"")`;
-var reverseStr = ':function\\(a\\)\\{' +
-  '(?:return )?a\\.reverse\\(\\)' +
-'\\}';
-var sliceStr = ':function\\(a,b\\)\\{' +
-  'return a\\.slice\\(b\\)' +
-'\\}';
-var spliceStr = ':function\\(a,b\\)\\{' +
-  'a\\.splice\\(0,b\\)' +
-'\\}';
-var swapStr = ':function\\(a,b\\)\\{' +
-  'var c=a\\[0\\];a\\[0\\]=a\\[b%a\\.length\\];a\\[b\\]=c(?:;return a)?' +
-'\\}';
-var actionsObjRegexp = new RegExp(
-  `var (${jsVarStr})=\\{((?:(?:` +
-    jsKeyStr + reverseStr + '|' +
-    jsKeyStr + sliceStr   + '|' +
-    jsKeyStr + spliceStr  + '|' +
-    jsKeyStr + swapStr +
-  '),?\\r?\\n?)+)\\};'
-);
-var actionsFuncRegexp = new RegExp(`function(?: ${jsVarStr})?\\(a\\)\\{` +
-    `a=a\\.split\\(${jsEmptyStr}\\);\\s*` +
-    `((?:(?:a=)?${jsVarStr}` +
-    jsPropStr +
-    '\\(a,\\d+\\);)+)' +
-    `return a\\.join\\(${jsEmptyStr}\\)` +
-  '\\}'
-);
-var reverseRegexp = new RegExp(`(?:^|,)(${jsKeyStr})${reverseStr}`, 'm');
-var sliceRegexp   = new RegExp(`(?:^|,)(${jsKeyStr})${sliceStr}`, 'm');
-var spliceRegexp  = new RegExp(`(?:^|,)(${jsKeyStr})${spliceStr}`, 'm');
-var swapRegexp    = new RegExp(`(?:^|,)(${jsKeyStr})${swapStr}`, 'm');
-
-
-/**
- * Extracts the actions that should be taken to decipher a signature.
- *
- * This searches for a function that performs string manipulations on
- * the signature. We already know what the 3 possible changes to a signature
- * are in order to decipher it. There is
- *
- * * Reversing the string.
- * * Removing a number of characters from the beginning.
- * * Swapping the first character with another position.
- *
- * Note, `Array#slice()` used to be used instead of `Array#splice()`,
- * it's kept in case we encounter any older html5player files.
- *
- * After retrieving the function that does this, we can see what actions
- * it takes on a signature.
- *
- * @param {String} body
- * @return {Array.<String>}
- */
-exports.extractActions = (body) => {
-  var objResult = actionsObjRegexp.exec(body);
-  var funcResult = actionsFuncRegexp.exec(body);
-  if (!objResult || !funcResult) { return null; }
-
-  var obj      = objResult[1].replace(/\$/g, '\\$');
-  var objBody  = objResult[2].replace(/\$/g, '\\$');
-  var funcBody = funcResult[1].replace(/\$/g, '\\$');
-
-  var result = reverseRegexp.exec(objBody);
-  var reverseKey = result && result[1]
-    .replace(/\$/g, '\\$')
-    .replace(/\$|^'|^"|'$|"$/g, '');
-  result = sliceRegexp.exec(objBody);
-  var sliceKey = result && result[1]
-    .replace(/\$/g, '\\$')
-    .replace(/\$|^'|^"|'$|"$/g, '');
-  result = spliceRegexp.exec(objBody);
-  var spliceKey = result && result[1]
-    .replace(/\$/g, '\\$')
-    .replace(/\$|^'|^"|'$|"$/g, '');
-  result = swapRegexp.exec(objBody);
-  var swapKey = result && result[1]
-    .replace(/\$/g, '\\$')
-    .replace(/\$|^'|^"|'$|"$/g, '');
-
-  var keys = `(${[reverseKey, sliceKey, spliceKey, swapKey].join('|')})`;
-  var myreg = '(?:a=)?' + obj +
-    `(?:\\.${keys}|\\['${keys}'\\]|\\["${keys}"\\])` +
-    '\\(a,(\\d+)\\)';
-  var tokenizeRegexp = new RegExp(myreg, 'g');
-  var tokens = [];
-  while ((result = tokenizeRegexp.exec(funcBody)) !== null) {
-    let key = result[1] || result[2] || result[3];
-    switch (key) {
-      case swapKey:
-        tokens.push('w' + result[4]);
-        break;
-      case reverseKey:
-        tokens.push('r');
-        break;
-      case sliceKey:
-        tokens.push('s' + result[4]);
-        break;
-      case spliceKey:
-        tokens.push('p' + result[4]);
-        break;
-    }
-  }
-  return tokens;
-};
-
-
-/**
- * @param {Object} format
- * @param {String} sig
- * @param {Boolean} debug
- */
-exports.setDownloadURL = (format, sig, debug) => {
-  var decodedUrl;
-  if (format.url) {
-    decodedUrl = format.url;
-  } else {
-    if (debug) {
-      console.warn('Download url not found for itag ' + format.itag);
-    }
-    return;
-  }
-
-  try {
-    decodedUrl = decodeURIComponent(decodedUrl);
-  } catch (err) {
-    if (debug) {
-      console.warn('Could not decode url: ' + err.message);
-    }
-    return;
-  }
-
-  // Make some adjustments to the final url.
-  var parsedUrl = url.parse(decodedUrl, true);
-
-  // Deleting the `search` part is necessary otherwise changes to
-  // `query` won't reflect when running `url.format()`
-  delete parsedUrl.search;
-
-  var query = parsedUrl.query;
-
-  // This is needed for a speedier download.
-  // See https://github.com/fent/node-ytdl-core/issues/127
-  query.ratebypass = 'yes';
-  if (sig) {
-    query.signature = sig;
-  }
-
-  format.url = url.format(parsedUrl);
-};
-
-
-/**
- * Applies `sig.decipher()` to all format URL's.
- *
- * @param {Array.<Object>} formats
- * @param {Array.<String>} tokens
- * @param {Boolean} debug
- */
-exports.decipherFormats = (formats, tokens, debug) => {
-  formats.forEach((format) => {
-    var sig = tokens && format.s ? exports.decipher(tokens, format.s) : null;
-    exports.setDownloadURL(format, sig, debug);
-  });
-};
-
-},{"miniget":54,"url":39}],60:[function(require,module,exports){
-'use strict';
-
-const qs       = require('querystring');
-const url      = require('url');
-const Entities = require('html-entities').AllHtmlEntities;
-const FORMATS  = require('./formats');
-
-
-const VIDEO_URL = 'https://www.youtube.com/watch?v=';
-
-
-/**
- * Parses a string representation of amount of milliseconds.
- *
- * @param {String} time
- * @return {Number}
- */
-var timeRegexp = /(?:(\d+)h)?(?:(\d+)m(?!s))?(?:(\d+)s)?(?:(\d+)(?:ms)?)?/;
-exports.parseTime = (time) => {
-  var result = timeRegexp.exec(time.toString());
-  var hours  = result[1] || 0;
-  var mins   = result[2] || 0;
-  var secs   = result[3] || 0;
-  var ms     = result[4] || 0;
-
-  return hours * 3600000 + mins * 60000 + secs * 1000 + parseInt(ms, 10);
-};
-
-
-// Use these to help sort formats, higher is better.
-var audioEncodingRanks = {
-  mp3: 1,
-  vorbis: 2,
-  aac: 3,
-  opus: 4,
-  flac: 5,
-};
-var videoEncodingRanks = {
-  'Sorenson H.283': 1,
-  'MPEG-4 Visual': 2,
-  'VP8': 3,
-  'VP9': 4,
-  'H.264': 5,
-};
-
-
-/**
- * Sort formats from highest quality to lowest.
- * By resolution, then video bitrate, then audio bitrate.
- *
- * @param {Object} a
- * @param {Object} b
- */
-exports.sortFormats = (a, b) => {
-  var ares = a.resolution ? parseInt(a.resolution.slice(0, -1), 10) : 0;
-  var bres = b.resolution ? parseInt(b.resolution.slice(0, -1), 10) : 0;
-  var afeats = ~~!!ares * 2 + ~~!!a.audioBitrate;
-  var bfeats = ~~!!bres * 2 + ~~!!b.audioBitrate;
-
-  function getBitrate(c) {
-    if (c.bitrate) {
-      let s = c.bitrate.split('-');
-      return parseFloat(s[s.length - 1], 10);
-    } else {
-      return 0;
-    }
-  }
-
-  function audioScore(c) {
-    var abitrate = c.audioBitrate || 0;
-    var aenc = audioEncodingRanks[c.audioEncoding] || 0;
-    return abitrate + aenc / 10;
-  }
-
-  if (afeats === bfeats) {
-    if (ares === bres) {
-      let avbitrate = getBitrate(a);
-      let bvbitrate = getBitrate(b);
-      if (avbitrate === bvbitrate) {
-        let aascore = audioScore(a);
-        let bascore = audioScore(b);
-        if (aascore === bascore) {
-          let avenc = videoEncodingRanks[a.encoding] || 0;
-          let bvenc = videoEncodingRanks[b.encoding] || 0;
-          return bvenc - avenc;
-        } else {
-          return bascore - aascore;
-        }
-      } else {
-        return bvbitrate - avbitrate;
-      }
-    } else {
-      return bres - ares;
-    }
-  } else {
-    return bfeats - afeats;
-  }
-};
-
-
-/**
- * Choose a format depending on the given options.
- *
- * @param {Array.<Object>} formats
- * @param {Object} options
- * @return {Object|Error}
- */
-exports.chooseFormat = (formats, options) => {
-  if (typeof options.format === 'object') {
-    return options.format;
-  }
-
-  if (options.filter) {
-    formats = exports.filterFormats(formats, options.filter);
-    if (formats.length === 0) {
-      return new Error('No formats found with custom filter');
-    }
-  }
-
-  var format;
-  var quality = options.quality || 'highest';
-  switch (quality) {
-    case 'highest':
-      format = formats[0];
-      break;
-
-    case 'lowest':
-      format = formats[formats.length - 1];
-      break;
-
-    default: {
-      let getFormat = (itag) => {
-        return formats.find((format) => format.itag === '' + itag);
-      };
-      if (Array.isArray(quality)) {
-        quality.find((q) => format = getFormat(q));
-      } else {
-        format = getFormat(quality);
-      }
-    }
-
-  }
-
-  if (!format) {
-    return new Error('No such format found: ' + quality);
-  }
-  return format;
-};
-
-
-/**
- * @param {Array.<Object>} formats
- * @param {Function} filter
- * @return {Array.<Object>}
- */
-exports.filterFormats = (formats, filter) => {
-  var fn;
-  switch (filter) {
-    case 'video':
-      fn = (format) => format.bitrate;
-      break;
-
-    case 'videoonly':
-      fn = (format) => format.bitrate && !format.audioBitrate;
-      break;
-
-    case 'audio':
-      fn = (format) => format.audioBitrate;
-      break;
-
-    case 'audioonly':
-      fn = (format) => !format.bitrate && format.audioBitrate;
-      break;
-
-    default:
-      if (typeof filter === 'function') {
-        fn = filter;
-      } else {
-        throw new TypeError(`Given filter (${filter}) is not supported`);
-      }
-  }
-  return formats.filter(fn);
-};
-
-
-/**
- * Extract string inbetween another.
- *
- * @param {String} haystack
- * @param {String} left
- * @param {String} right
- * @return {String}
- */
-exports.between = (haystack, left, right) => {
-  var pos;
-  pos = haystack.indexOf(left);
-  if (pos === -1) { return ''; }
-  haystack = haystack.slice(pos + left.length);
-  pos = haystack.indexOf(right);
-  if (pos === -1) { return ''; }
-  haystack = haystack.slice(0, pos);
-  return haystack;
-};
-
-
-/**
- * Get video ID.
- *
- * There are a few type of video URL formats.
- *  - http://www.youtube.com/watch?v=VIDEO_ID
- *  - http://m.youtube.com/watch?v=VIDEO_ID
- *  - http://youtu.be/VIDEO_ID
- *  - http://www.youtube.com/v/VIDEO_ID
- *  - http://www.youtube.com/embed/VIDEO_ID
- *
- * @param {String} link
- * @return {String|Error}
- */
-exports.getURLVideoID = function(link) {
-  var parsed = url.parse(link, true);
-  var id = parsed.query.v;
-  if (parsed.hostname === 'youtu.be' ||
-     (parsed.hostname === 'youtube.com' ||
-      parsed.hostname === 'www.youtube.com') && !id) {
-    var s = parsed.pathname.split('/');
-    id = s[s.length - 1];
-  }
-  if (!id) {
-    return new Error('No video id found: ' + link);
-  }
-  id = id.substring(0, 11);
-  if (!exports.validateID(id)) {
-    return new TypeError(`Video id (${id}) does not match expected ` +
-      `format (${idRegex.toString()})`);
-  }
-  return id;
-};
-
-
-/**
- * Gets video ID either from a url or by checking if the given string
- * matches the video ID format.
- *
- * @param {String} str
- * @return {String|Error}
- */
-exports.getVideoID = (str) => {
-  if (exports.validateID(str)) {
-    return str;
-  } else {
-    return exports.getURLVideoID(str);
-  }
-};
-
-
-/**
- * Returns true if given id satifies YouTube's id format.
- *
- * @param {String} id
- * @return {Boolean}
- */
-var idRegex = /^[a-zA-Z0-9-_]{11}$/;
-exports.validateID = (id) => {
-  return idRegex.test(id);
-};
-
-
-/**
- * Checks wether the input string includes a valid id.
- *
- * @param {String} string
- * @return {Boolean}
- */
-exports.validateURL = (string) => {
-  return !(exports.getURLVideoID(string) instanceof Error);
-};
-
-
-/**
- * @param {Object} info
- * @return {Array.<Object>}
- */
-exports.parseFormats = (info) => {
-  var formats = [];
-  if (info.url_encoded_fmt_stream_map) {
-    formats = formats
-      .concat(info.url_encoded_fmt_stream_map.split(','));
-  }
-  if (info.adaptive_fmts) {
-    formats = formats.concat(info.adaptive_fmts.split(','));
-  }
-
-  formats = formats.map((format) => qs.parse(format));
-  delete info.url_encoded_fmt_stream_map;
-  delete info.adaptive_fmts;
-
-  return formats;
-};
-
-
-/**
- * @param {Object} format
- */
-exports.addFormatMeta = (format) => {
-  var meta = FORMATS[format.itag];
-  for (let key in meta) {
-    format[key] = meta[key];
-  }
-
-  if (/\/live\/1\//.test(format.url)) {
-    format.live = true;
-  }
-};
-
-
-/**
- * Get video description from html
- *
- * @param {String} html
- * @return {String}
- */
-exports.getVideoDescription = (html) => {
-  var regex = /<p.*?id="eow-description".*?>(.+?)<\/p>[\n\r\s]*?<\/div>/im;
-  var description = html.match(regex);
-  return description ? new Entities().decode(description[1]
-    .replace(/\n/g, ' ')
-    .replace(/\s*<\s*br\s*\/?\s*>\s*/gi, '\n')
-    .replace(/<\s*\/\s*p\s*>\s*<\s*p[^>]*>/gi, '\n')
-    .replace(/<.*?>/gi, '')).trim() : '';
-};
-
-
-/**
- * Get video Owner from html.
- *
- * @param {String} body
- * @return {Object}
- */
-var authorRegexp = /<a href="\/channel\/([\w-]+)"[^>]+>(.+?(?=<\/a>))/;
-var aliasRegExp = /<a href="\/user\/([^"]+)/;
-exports.getAuthor = (body) => {
-  var ownerinfo = exports.between(body,
-    '<div id="watch7-user-header" class=" spf-link ">',
-    '<div id="watch8-action-buttons" class="watch-action-buttons clearfix">');
-  if (ownerinfo === '') {
-    return {};
-  }
-  ownerinfo = new Entities().decode(ownerinfo);
-  var channelMatch = ownerinfo.match(authorRegexp);
-  var userMatch = ownerinfo.match(aliasRegExp);
-  return {
-    id: channelMatch[1],
-    name: channelMatch[2],
-    avatar: url.resolve(VIDEO_URL, exports.between(ownerinfo,
-      'data-thumb="', '"')),
-    user: userMatch ? userMatch[1] : null,
-    channel_url: 'https://www.youtube.com/channel/' + channelMatch[1],
-    user_url: userMatch ? 'https://www.youtube.com/user/' + userMatch[1] : null,
-  };
-};
-
-
-/**
- * Get video published at from html.
- *
- * @param {String} body
- * @return {String}
- */
-exports.getPublished = (body) => {
-  return Date.parse(exports.between(body,
-    '<meta itemprop="datePublished" content="', '">'));
-};
-
-
-/**
- * Get video published at from html.
- * Credits to https://github.com/paixaop.
- *
- * @param {String} body
- * @return {Array.<Object>}
- */
-exports.getRelatedVideos = (body) => {
-  var jsonStr = exports.between(body, '\'RELATED_PLAYER_ARGS\': {"rvs":', '},');
-  try {
-    jsonStr = JSON.parse(jsonStr);
-  } catch (err) {
-    return [];
-  }
-  return jsonStr.split(',').map((link) => qs.parse(link));
-};
-
-
-/**
- * @param {Array.<Function>} funcs
- * @param {Function(!Error, Array.<Object>)} callback
- */
-exports.parallel = (funcs, callback) => {
-  var funcsDone = 0;
-  var len = funcs.length;
-  var errGiven = false;
-  var results = [];
-
-  function checkDone(index, err, result) {
-    if (errGiven) { return; }
-    if (err) {
-      errGiven = true;
-      callback(err);
-      return;
-    }
-    results[index] = result;
-    if (++funcsDone === len) {
-      callback(null, results);
-    }
-  }
-
-  if (len > 0) {
-    funcs.forEach((f, i) => { f(checkDone.bind(null, i)); });
-  } else {
-    callback(null, results);
-  }
-};
-
-
-/**
- * (Deep) assign object to another.
- *
- * @param {Object} target
- * @param {Object} source
- * @param {boolean} deep
- */
-exports.objectAssign = (target, source, deep) => {
-  for (var key in source) {
-    if (deep && typeof source[key] === 'object' && source[key] != null &&
-        target[key]) {
-      exports.objectAssign(target[key], source[key]);
-    } else {
-      target[key] = source[key];
-    }
-  }
-  return target;
-};
-
-
-/**
- * Converts human friendly time to milliseconds. Supports the format
- * 00:00:00.000 for hours, minutes, seconds, and milliseconds respectively.
- * And 0ms, 0s, 0m, 0h, and together 1m1s.
- *
- * @param {String|Number} time
- * @return {Number}
- */
-var numberFormat = /^\d+$/;
-var timeFormat = /^(?:(?:(\d+):)?(\d{1,2}):)?(\d{1,2})(?:\.(\d{3}))?$/;
-var timeUnits = {
-  ms: 1,
-  s: 1000,
-  m: 60000,
-  h: 3600000,
-};
-exports.fromHumanTime = (time) => {
-  if (typeof time === 'number') { return time; }
-  if (numberFormat.test(time)) { return +time; }
-  var firstFormat = timeFormat.exec(time);
-  if (firstFormat) {
-    return +(firstFormat[1] || 0) * timeUnits.h +
-      +(firstFormat[2] || 0) * timeUnits.m +
-      +firstFormat[3] * timeUnits.s +
-      +(firstFormat[4] || 0);
-  } else {
-    var total = 0;
-    var r = /(\d+)(ms|s|m|h)/g;
-    var rs;
-    while ((rs = r.exec(time)) != null) {
-      total += +rs[1] * timeUnits[rs[2]];
-    }
-    return total;
-  }
-};
-
-},{"./formats":56,"html-entities":47,"querystring":17,"url":39}]},{},[46]);
+},{}]},{},[1]);
